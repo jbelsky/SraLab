@@ -2,6 +2,8 @@
 """
 Created on Wed Jun 27 21:16:15 2018
 
+Updated: 2018-09-30
+
 @author: jab112
 """
 
@@ -35,7 +37,7 @@ def GetStuAvgScore(arg_out_df, arg_score_df, arg_id, arg_gender, arg_type):
 
 	arg_out_df.loc[arg_id, "mean"] = scoreMean
 
-def GetClassAvgScore(arg_out_df, arg_gender):
+def GetClassAvgScore(arg_out_df):
 
 	# Obtain the indices where there is a mean
 	iScore = arg_out_df["mean"] != 9
@@ -45,44 +47,34 @@ def GetClassAvgScore(arg_out_df, arg_gender):
 		arg_out_df.loc[~iScore, "ClassGender_mean"] = 9
 		arg_out_df.loc[~iScore, "ClassGender_std"] = 9
 
-	# Iterate through each gender case
-	if arg_gender == "AllGender":
-		arg_out_df["ClassGender_mean"] = arg_out_df["mean"].mean()
-		arg_out_df["ClassGender_std"] = classStd = arg_out_df["mean"].std()
-	elif arg_gender == "ByGender":
-		# Iterate through each gender separately
-		for g in arg_out_df["Gender"].unique():
+	# Iterate through each gender separately
+	for g in arg_out_df["Gender"].unique():
 
-			# Set the idx
-			iScoreGender = iScore & (arg_out_df["Gender"] == g)
+		# Get the iScore Gender
+		iGender = arg_out_df["Gender"] == g
+		iScoreGender = iScore & iGender
 
-			arg_out_df.loc[iScoreGender, "ClassGender_mean"] = arg_out_df.loc[iScoreGender,"mean"].mean()
-			arg_out_df.loc[iScoreGender, "ClassGender_std"] = arg_out_df.loc[iScoreGender,"mean"].std()
-	elif arg_gender == "CrossGender":
-		# Iterate through each gender separately
-		for g in arg_out_df["Gender"].unique():
+		arg_out_df.loc[iScoreGender, "ClassGender_mean"] = arg_out_df.loc[iScoreGender,"mean"].mean()
+		arg_out_df.loc[iScoreGender, "ClassGender_std"] = arg_out_df.loc[iScoreGender,"mean"].std()
 
-			# Set the idx
-			iScoreGender = iScore & (arg_out_df["Gender"] != g)
+def GetZscore(row):
 
-			arg_out_df.loc[iScoreGender, "ClassGender_mean"] = arg_out_df.loc[iScoreGender,"mean"].mean()
-			arg_out_df.loc[iScoreGender, "ClassGender_std"] = arg_out_df.loc[iScoreGender,"mean"].std()
+	if row["mean"] == 9:
+		return 9
 
-
-
-
+	return (row["mean"] - row["ClassGender_mean"]) / row["ClassGender_std"]
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_excel", help = "the input Socalla Excel sheet")
-# parser.add_argument("output_text", help = "the output text file")
+parser.add_argument("output_text", help = "the output text file")
 args = parser.parse_args()
 wb = openpyxl.load_workbook(args.input_excel)
 
-#for i in range(15, 53):
-for i in range(15, 16):
+data_d = OrderedDict()
 
-	sheet_name = "Class " + str(i)
-	print(sheet_name)
+#for i in range(15, 53):
+for sheet_name in wb.get_sheet_names():
+
 	ws = wb[sheet_name]
 
 	# Find the indices
@@ -102,8 +94,8 @@ for i in range(15, 16):
 	score_df = pd.DataFrame(score_matrix, index = stuIDs, columns = stuIDs, dtype = np.int16)
 
 	# Construct the output dataframe
-	outTemplate_df = pd.DataFrame(np.column_stack((stuIDs, genders)),
-								      columns = ["StudentID", "Gender"],
+	outTemplate_df = pd.DataFrame(genders,
+								      columns = ["Gender"],
 									   index = stuIDs
 								      )
 
@@ -118,8 +110,6 @@ for i in range(15, 16):
 		outTemplate_df.drop(stuID_drop, inplace = True)
 		score_df.drop(index = stuID_drop, columns = stuID_drop, inplace = True)
 
-	outTemplate_df["Gender"].iloc[0:2] = 7
-
 	# Ensure that there aren't any unknown genders
 	if(any(~outTemplate_df["Gender"].isin([0,1]))):
 		iUnknownGender = ~outTemplate_df["Gender"].isin([0,1])
@@ -130,7 +120,6 @@ for i in range(15, 16):
 	# Create the output for each type [AllGender, ByGender, CrossGender]
 	genderComps = ["AllGender", "ByGender", "CrossGender"]
 	analysisTypes = ["Given", "Received"]
-	data_d = OrderedDict()
 
 	for gComp, aType in itertools.product(genderComps, analysisTypes):
 
@@ -142,58 +131,22 @@ for i in range(15, 16):
 			# Get the student average score
 			GetStuAvgScore(output_df, score_df, stuID, gComp, aType)
 
-		# Get the class gender mean and std
+		# Get the class gender mean and std (stratified by gender)
+		GetClassAvgScore(output_df)
 
-		data_d[(gComp, aType)] = output_df
+		# Convert to z-score
+		output_df["ClassGender_zscore" ] = output_df.apply(GetZscore, axis = 1)
 
-'''
-		# Get the class-gender mean and std
-		output_df.loc[, ("ClassGender_mean", "ClassGender_std")]
+		# Store in data dict
+		key = (gComp, aType)
+		if key not in data_d:
+			data_d[key] = output_df
+		else:
+			data_d[key] = data_d[key].append(output_df)
 
-	# Get the class-gender mean and std
-	for g in [0, 1]:
+# Create the output workbook
+writer= pd.ExcelWriter(args.output_text)
+for k in data_d.keys():
+	data_d[k].to_excel(writer, sheet_name = "_".join(k))
 
-		for gr in ["Given", "Received"]:
-
-			# Set the idx
-			idx = (output_df["Gender"] == g) & (output_df[gr + "_mean"] != 9)
-
-			output_df.loc[idx, gr + "_ClassGender_mean"] = output_df.loc[idx, gr + "_mean"].mean()
-			output_df.loc[idx, gr + "_ClassGender_std"] = output_df.loc[idx, gr + "_mean"].std()
-
-			# Set the missing means and std to 9
-			idx = (output_df["Gender"] == g) & (output_df[gr + "_mean"] == 9)
-			output_df.loc[idx, gr + "_ClassGender_mean"] = 9
-			output_df.loc[idx, gr + "_ClassGender_std"] = 9
-
-
-	# Set the missings to 9!
-	# Get rid of the chain indexing from below
-
-
-	for stIdx in output_df.index:
-
-		for gr in ["Given", "Received"]:
-
-			# Calculate z-score
-			curMean = output_df.loc[stIdx, gr + "_mean"]
-			classMean = output_df.loc[stIdx, gr + "_ClassGender_mean"]
-			stDev = output_df.loc[stIdx, gr + "_ClassGender_std"]
-
-			#if sheet_name == "Class 23":
-			#	print(str(output_df.loc[stIdx, "StudentID"]) + "\t" + "\t".join([str(curMean),str(classMean),str(stDev)]))
-
-			# Get the z_score if not missing
-			if curMean == 9:
-				z_score = 9
-			else:
-				z_score = (curMean - classMean) / stDev
-
-			output_df.loc[stIdx,gr + "_ClassGender_zscore"] = z_score
-
-	if sheet_name == "Class 15":
-		output_df.to_csv(args.output_text, mode = "w", sep = "\t", header = True, index = False)
-	else:
-		output_df.to_csv(args.output_text, mode = "a", sep = "\t", header = False, index = False)
-
-'''
+writer.save()

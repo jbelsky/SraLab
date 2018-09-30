@@ -9,6 +9,68 @@ import openpyxl
 import pandas as pd
 import numpy as np
 import argparse
+import itertools
+from collections import OrderedDict
+
+def GetStuAvgScore(arg_out_df, arg_score_df, arg_id, arg_gender, arg_type):
+
+	# Get the given or received score
+	score = pd.Series(dtype = np.int64)
+	if arg_type == "Given":
+		score = arg_score_df.loc[arg_id]
+	elif arg_type == "Received":
+		score = arg_score_df[arg_id]
+
+	# Get scores != 9
+	# See if there needs to be a gender filter
+	iScore = score != 9
+	if arg_gender == "ByGender":
+		iScore = iScore & (arg_out_df["Gender"] == arg_out_df.loc[arg_id, "Gender"])
+	elif arg_gender == "CrossGender":
+		iScore = iScore & (arg_out_df["Gender"] != arg_out_df.loc[arg_id, "Gender"])
+
+	# Subset on the score
+	score = score[iScore]
+	scoreMean = score.mean() if len(score) > 0 else 9
+
+	arg_out_df.loc[arg_id, "mean"] = scoreMean
+
+def GetClassAvgScore(arg_out_df, arg_gender):
+
+	# Obtain the indices where there is a mean
+	iScore = arg_out_df["mean"] != 9
+
+	# Set no mean score std and mean to 9
+	if any(~iScore):
+		arg_out_df.loc[~iScore, "ClassGender_mean"] = 9
+		arg_out_df.loc[~iScore, "ClassGender_std"] = 9
+
+	# Iterate through each gender case
+	if arg_gender == "AllGender":
+		arg_out_df["ClassGender_mean"] = arg_out_df["mean"].mean()
+		arg_out_df["ClassGender_std"] = classStd = arg_out_df["mean"].std()
+	elif arg_gender == "ByGender":
+		# Iterate through each gender separately
+		for g in arg_out_df["Gender"].unique():
+
+			# Set the idx
+			iScoreGender = iScore & (arg_out_df["Gender"] == g)
+
+			arg_out_df.loc[iScoreGender, "ClassGender_mean"] = arg_out_df.loc[iScoreGender,"mean"].mean()
+			arg_out_df.loc[iScoreGender, "ClassGender_std"] = arg_out_df.loc[iScoreGender,"mean"].std()
+	elif arg_gender == "CrossGender":
+		# Iterate through each gender separately
+		for g in arg_out_df["Gender"].unique():
+
+			# Set the idx
+			iScoreGender = iScore & (arg_out_df["Gender"] != g)
+
+			arg_out_df.loc[iScoreGender, "ClassGender_mean"] = arg_out_df.loc[iScoreGender,"mean"].mean()
+			arg_out_df.loc[iScoreGender, "ClassGender_std"] = arg_out_df.loc[iScoreGender,"mean"].std()
+
+
+
+
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_excel", help = "the input Socalla Excel sheet")
@@ -40,56 +102,53 @@ for i in range(15, 16):
 	score_df = pd.DataFrame(score_matrix, index = stuIDs, columns = stuIDs, dtype = np.int16)
 
 	# Construct the output dataframe
-	output_df = pd.DataFrame(np.column_stack((stuIDs, genders)),
-								  columns = ["StudentID", "Gender"],
-								  index = stuIDs
-							 )
+	outTemplate_df = pd.DataFrame(np.column_stack((stuIDs, genders)),
+								      columns = ["StudentID", "Gender"],
+									   index = stuIDs
+								      )
 
 	# Add in the additional columns
-	addl_columns = ["Given_mean", "Given_ClassGender_mean", "Given_ClassGender_std", "Given_ClassGender_zscore",
-					   "Received_mean", "Received_ClassGender_mean", "Received_ClassGender_std", "Received_ClassGender_zscore"
-				     ]
-	output_df = output_df.reindex(columns = output_df.columns.tolist() + addl_columns, fill_value = 0)
+	addl_columns = ["mean", "ClassGender_mean", "ClassGender_std", "ClassGender_zscore"]
+	outTemplate_df = outTemplate_df.reindex(columns = outTemplate_df.columns.tolist() + addl_columns, fill_value = 0)
 
 	# Need to patch colA, gender_idx, output_df, and df if any of the
 	STUDENT_IDS_SKIP = [2309, 2707, 2708, 4114, 4124, 4621, 4819]
 	if any(stuIDs.isin(STUDENT_IDS_SKIP)):
 		stuID_drop = stuIDs[stuIDs.isin(STUDENT_IDS_SKIP)]
-		output_df.drop(stuID_drop, inplace = True)
+		outTemplate_df.drop(stuID_drop, inplace = True)
 		score_df.drop(index = stuID_drop, columns = stuID_drop, inplace = True)
 
+	outTemplate_df["Gender"].iloc[0:2] = 7
+
+	# Ensure that there aren't any unknown genders
+	if(any(~outTemplate_df["Gender"].isin([0,1]))):
+		iUnknownGender = ~outTemplate_df["Gender"].isin([0,1])
+		for s in outTemplate_df.index[np.where(iUnknownGender)[0]]:
+			print("ERROR: %d gender is %d (must be '0' or '1')!" % (s, outTemplate_df.loc[s,"Gender"]))
+		break
+
 	# Create the output for each type [AllGender, ByGender, CrossGender]
-	output_template = output_df.copy()
+	genderComps = ["AllGender", "ByGender", "CrossGender"]
+	analysisTypes = ["Given", "Received"]
+	data_d = OrderedDict()
 
-	# Iterate through each id
-	for stuID in output_df.index:
+	for gComp, aType in itertools.product(genderComps, analysisTypes):
 
-		# Get the given and received score
-		givenScore = score_df.loc[studentID]
-		receiveScore = score_df[studentID]
+		output_df = outTemplate_df.copy()
 
-		# Get scores != 9
-		iGiven = givenScore != 9
-		iReceive = receiveScore != 9
+		# Get the average score for each student
+		for stuID in output_df.index:
 
-		# See if there needs to be a gender filter
-		if analysisType == "ByGender":
-			iGiven = iGiven & (genders == output_df.loc[stuID, "Gender"])
-			iReceive = iGiven & (genders == output_df.loc[stuID, "Gender"])
-		elif analysisType == "CrossGender":
-			iGiven = iGiven & (genders != output_df.loc[stuID, "Gender"])
-			iReceive = iGiven & (genders != output_df.loc[stuID, "Gender"])
+			# Get the student average score
+			GetStuAvgScore(output_df, score_df, stuID, gComp, aType)
 
-		# Subset on the score
-		score = score[scoreSubset_idx]
+		# Get the class gender mean and std
 
-		if len(score) > 0:
-			meanScore = score.mean()
-		else:
-			meanScore = 9
+		data_d[(gComp, aType)] = output_df
 
-		# Select the output column
-		output_df.loc[output_df["StudentID"] == studentID, colname] = meanScore
+'''
+		# Get the class-gender mean and std
+		output_df.loc[, ("ClassGender_mean", "ClassGender_std")]
 
 	# Get the class-gender mean and std
 	for g in [0, 1]:

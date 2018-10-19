@@ -66,7 +66,6 @@ def GetZscore(row):
 
 parser = argparse.ArgumentParser()
 parser.add_argument("input_excel", help = "the input Socalla Excel sheet")
-parser.add_argument("output_text", help = "the output text file")
 args = parser.parse_args()
 wb = openpyxl.load_workbook(args.input_excel)
 
@@ -145,8 +144,12 @@ for sheet_name in wb.get_sheet_names():
 			data_d[key] = data_d[key].append(output_df)
 
 # Create the output workbook
-writer= pd.ExcelWriter(args.output_text)
+f_out = args.input_excel.replace(".xlsx", "_analysis.xlsx")
+writer= pd.ExcelWriter(f_out)
 for k in data_d.keys():
+	data_d[k].sort_index(inplace = True)
 	data_d[k].to_excel(writer, sheet_name = "_".join(k))
 
 writer.save()
+
+print("Analysis written to %s\n" % f_out)

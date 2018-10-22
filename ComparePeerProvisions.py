@@ -61,7 +61,7 @@ dir2_files = glob.glob(args.excel_dir2 + "/*.xlsx")
 dir1_files.sort()
 dir2_files.sort()
 
-for i,xls1 in enumerate(dir1_files):
+for i,xls1 in enumerate(dir1_files[0:1]):
 
 	xls2 = dir2_files[i]
 

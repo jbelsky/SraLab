@@ -59,6 +59,8 @@ analysisCols = ["_".join(x) + "_mean" for x in itertools.product(genderComps, an
 # Store the output_df
 allItems_d = OrderedDict()
 
+STUDENT_IDS_SKIP = [2309, 2707, 2708, 4114, 4124, 4621, 4819]
+
 for item in range(1,13):
 
 	f_xls = glob.glob(args.input_xls_dir + "/Peer provisions item " + str(item) + "_*.xlsx")[0]
@@ -77,6 +79,11 @@ for item in range(1,13):
 		ws = wb[sheet_name]
 	
 		data_df, gender_s = classmatrix.GetDataMatrix(ws)
+
+		if any(data_df.index.isin(STUDENT_IDS_SKIP)):
+			stuID_drop = data_df.index[data_df.index.isin(STUDENT_IDS_SKIP)]
+			data_df.drop(index = stuID_drop, columns = stuID_drop, inplace = True)
+			gender_s.drop(index = stuID_drop, inplace = True)
 		
 		# Construct the output dataframe
 		out_df = pd.DataFrame(np.zeros(shape = (data_df.shape[0], 7)), columns = ["Gender"] + analysisCols, index = data_df.index)
@@ -99,8 +106,9 @@ for item in range(1,13):
 f_out = args.input_xls_dir + "/PeerProvisionsByItemAnalysis.xlsx"
 writer= pd.ExcelWriter(f_out)
 for k in allItems_d.keys():
-	allItems_d[k].to_excel(writer, sheet_name = "Item_" + str(k))
+	allItems_d[k].to_excel(writer, sheet_name = "Item_" + str(k), float_format = "%.4f", freeze_panes = (1, 1))
 
 writer.save()
 
 print("Analysis written to %s\n" % f_out)
+

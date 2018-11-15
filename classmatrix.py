@@ -33,9 +33,9 @@ def GetDataRange(_np_arr):
 		if type(_np_arr[i]) != int:
 			iEnd = i - 1
 			break
-	if iEnd == iStart:
-		iEnd = len(_np_arr)
-
+		else:
+			iEnd = i
+		
 	return (iStart, iEnd)
 
 

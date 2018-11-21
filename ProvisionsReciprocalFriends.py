@@ -11,9 +11,62 @@ import numpy as np
 import os
 import glob
 import argparse
+import re
 from collections import OrderedDict
 
 import classmatrix
+
+# Set up the new class
+class OParkStudent:
+
+	def __init__(self, _studentID, _gender):
+
+		self.studentID = _studentID
+		self.gender = _gender
+
+	def set_friendship_array(self, _friendship_npArray):
+
+		self.friendship_npArray = _friendship_npArray
+
+
+	def init_peer_provision_df(self, _friendship_df, numProvisions):
+
+		self.peerProvision_df = pd.DataFrame(index = _friendship_df.index, columns = range(1, numProvisions + 1))
+
+
+def GetPeerProvisions(_dir):
+
+	# Initialize the peerProvision matrix
+	peerProv_dict = {}
+
+	# Obtain the number of peer provision matrices
+	peerProv_xlsx_files = glob.glob(_dir + "/*xlsx")
+	peerProv_xlsx_files.sort()
+
+	# Get the peer provision item -> file dict
+	p = re.compile("Peer provisions item (\d{1,2})_.*\.xlsx")
+
+	for f in peerProv_xlsx_files:
+
+		item = p.match(os.path.basename(f)).group(1)
+		peerProvItemFile_dict[item] = {}
+
+		pp_wb = openpyxl.load_workbook(f)
+
+		for OPclass in pp_wb.sheetnames:
+
+			if "Class" not in OPclass:
+				continue
+
+			data_df, gender_s = classmatrix.GetDataMatrix(pp_wb[OPclass])
+
+			# Enter into dict
+			peerProvItemFile_dict[item][OPclass] = data_df
+
+		pp_wb.close()
+
+		return peerProvItemFile_dict
+
 
 def GetClassFriendshipMatrix(_friendship_df):
 
@@ -47,13 +100,16 @@ parser.add_argument("peer_provisions_dir", help = "Directory containing peer pro
 parser.add_argument("-o", "--output", action = "store", default = "compare_excel_dirs.txt", type = str)
 args = parser.parse_args()
 
+
+
+
 # Load in the friendship matrix
 wb = openpyxl.load_workbook(args.friendship_nom_file)
 class_sn = wb.sheetnames
 class_sn.sort()
 
 # Set up the friendship_matrix dict
-classFriendship_dict = OrderedDict()
+OPclass_dict = OrderedDict()
 
 for c in class_sn:
 
@@ -61,11 +117,28 @@ for c in class_sn:
 	friendship_df, gender_s = classmatrix.GetDataMatrix(wb[c])
 
 	# Get the friendship matrix
-	classFriendship_dict[c] = GetClassFriendshipMatrix(friendship_df)
+	friendship_mat = GetClassFriendshipMatrix(friendship_df)
 
-# Load in each of the provision matrices
-peerProv_xlsx_files = glob.glob(args.peer_provisions_dir + "/*xlsx")
-peerProv_xlsx_files.sort()
+	# Initialize the students
+	student_dict = OrderedDict()
+	for i in range(0, friendship_df.shape[0]):
+
+		stuOP = OParkStudent(friendship_df.index[i], gender_s.iloc[i])
+		stuOP.set_friendship_array(friendship_mat[i,:])
+		stuOP.init_peer_provision_df(friendship_df, len(peerProv_xlsx_files))
+
+		# Enter into the student_dict
+		student_dict[stuOP.studentID] = stuOP
+
+	break
+
+wb.close()
+
+'''
+# Initialize the provisions_matrix dict
+provisionsByClass_dict = OrderedDict()
+
+
 
 # Iterate through each peer provision
 for pp_xls in peerProv_xlsx_files:
@@ -80,7 +153,7 @@ for pp_xls in peerProv_xlsx_files:
 		except:
 			print("%s is not in %s, skipping..." % (c, pp_xls))
 			continue
-'''
+
 
 # Load in the peer provisions
 for pp_xls in peerProv_xls_files:

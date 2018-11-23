@@ -16,6 +16,47 @@ from collections import OrderedDict
 
 import classmatrix
 
+# Set up the new OPClass
+
+class OParkClass:
+
+	def __init__(self, _classID, _students_list, _friendship_mat, _allClassPeerProvisionsByItem_dict):
+
+		self.classID = _classID
+		self.students_list = _students_list
+		self.friendships_mat = _friendship_mat
+
+		self.peerProvisions_dict = OrderedDict()
+		self.peerProvisions_items = list(_allClassPeerProvisionsByItem_dict)
+		self.peerProvisions_items.sort()
+
+		for i in items:
+			if self.classID in _allClassPeerProvisionsByItem_dict[i]:
+				self.peerProvisions_dict[i] = _allClassPeerProvisionsByItem_dict[i][self.classID]
+
+	def get_studentIDs(self):
+
+		return [s.studentID for s in self.students_list]
+
+	def get_studentID_index(self, _studentID):
+
+		studentID_list = self.get_studentIDs()
+		try:
+			return studentID_list.index(_studentID)
+		except:
+			print("StudentID %d is not in %s" % (_studentID, self.classID))
+
+	def get_peer_provisions_items(self):
+
+		return self.peerProvisions_items
+
+	def get_peer_provisions_item_df(self, _peerProvItem):
+
+		return self.peerProvisions_dict[_peerProvItem]
+
+	def get_friendship_mat(self):
+		return self.friendships_mat
+
 # Set up the new class
 class OParkStudent:
 
@@ -24,20 +65,29 @@ class OParkStudent:
 		self.studentID = _studentID
 		self.gender = _gender
 
-	def set_friendship_array(self, _friendship_npArray):
+	def set_received_peerprov_mat(self, _OPclass):
 
-		self.friendship_npArray = _friendship_npArray
+		self.receivedPeerProv_mat = pd.DataFrame(index = _OPclass.get_studentIDs(),
+											   columns = list(_OPclass.peerProvisions_dict.keys()),
+											   dtype = int
+											  )
 
+		# Fill in the data frame from the OParkClass
+		for item, prov_df in _OPclass.peerProvisions_dict.items():
+			self.receivedPeerProv_mat.loc[:,item] = prov_df.loc[:,self.studentID]
 
-	def init_peer_provision_df(self, _friendship_df, numProvisions):
+	def set_received_friendships(self, _OPclass):
 
-		self.peerProvision_df = pd.DataFrame(index = _friendship_df.index, columns = range(1, numProvisions + 1))
+		friendship_mat = _OPclass.get_friendship_mat()
+		i = _OPclass.get_studentID_index(self.studentID)
+		self.receivedFriendships = friendship_mat[i,:]
+
 
 
 def GetPeerProvisions(_dir):
 
 	# Initialize the peerProvision matrix
-	peerProv_dict = {}
+	classPeerProvisionByItem_dict = {}
 
 	# Obtain the number of peer provision matrices
 	peerProv_xlsx_files = glob.glob(_dir + "/*xlsx")
@@ -48,8 +98,10 @@ def GetPeerProvisions(_dir):
 
 	for f in peerProv_xlsx_files:
 
-		item = p.match(os.path.basename(f)).group(1)
-		peerProvItemFile_dict[item] = {}
+		print(f)
+
+		item = int(p.match(os.path.basename(f)).group(1))
+		classPeerProvisionByItem_dict[item] = {}
 
 		pp_wb = openpyxl.load_workbook(f)
 
@@ -61,11 +113,11 @@ def GetPeerProvisions(_dir):
 			data_df, gender_s = classmatrix.GetDataMatrix(pp_wb[OPclass])
 
 			# Enter into dict
-			peerProvItemFile_dict[item][OPclass] = data_df
+			classPeerProvisionByItem_dict[item][OPclass] = data_df
 
 		pp_wb.close()
 
-		return peerProvItemFile_dict
+	return classPeerProvisionByItem_dict
 
 
 def GetClassFriendshipMatrix(_friendship_df):
@@ -100,8 +152,8 @@ parser.add_argument("peer_provisions_dir", help = "Directory containing peer pro
 parser.add_argument("-o", "--output", action = "store", default = "compare_excel_dirs.txt", type = str)
 args = parser.parse_args()
 
-
-
+# Get the peer provisions for each of the classes
+classPeerProvisionsByItem_dict = GetPeerProvisions(args.peer_provisions_dir)
 
 # Load in the friendship matrix
 wb = openpyxl.load_workbook(args.friendship_nom_file)
@@ -114,25 +166,26 @@ OPclass_dict = OrderedDict()
 for c in class_sn:
 
 	# Import the nominations matrix
-	friendship_df, gender_s = classmatrix.GetDataMatrix(wb[c])
+	friendship_df, gender_srs = classmatrix.GetDataMatrix(wb[c])
 
 	# Get the friendship matrix
 	friendship_mat = GetClassFriendshipMatrix(friendship_df)
 
-	# Initialize the students
-	student_dict = OrderedDict()
-	for i in range(0, friendship_df.shape[0]):
+	# Set the OParkStudent list
+	OPstudent_list = [OParkStudent(i, gender_srs.loc[i]) for i in gender_srs.index]
 
-		stuOP = OParkStudent(friendship_df.index[i], gender_s.iloc[i])
-		stuOP.set_friendship_array(friendship_mat[i,:])
-		stuOP.init_peer_provision_df(friendship_df, len(peerProv_xlsx_files))
-
-		# Enter into the student_dict
-		student_dict[stuOP.studentID] = stuOP
+	# Initialize an OPClass
+	orlandParkClass = OParkClass(c, OPstudent_list, friendship_mat, classPeerProvisionsByItem_dict)
 
 	break
 
 wb.close()
+
+
+ops = OParkStudent(1502, 1)
+ops.set_received_peerprov_mat(orlandParkClass)
+ops.set_received_friendships(orlandParkClass)
+
 
 '''
 # Initialize the provisions_matrix dict

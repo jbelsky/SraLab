@@ -20,17 +20,17 @@ import classmatrix
 
 class OParkClass:
 
-	def __init__(self, _classID, _students_list, _friendship_mat, _allClassPeerProvisionsByItem_dict):
+	def __init__(self, _classID, _students_list, _friendship_dict, _allClassPeerProvisionsByItem_dict):
 
 		self.classID = _classID
 		self.students_list = _students_list
-		self.friendships_mat = _friendship_mat
+		self.friendships_dict = _friendship_dict
 
 		self.peerProvisions_dict = OrderedDict()
 		self.peerProvisions_items = list(_allClassPeerProvisionsByItem_dict)
 		self.peerProvisions_items.sort()
 
-		for i in items:
+		for i in self.peerProvisions_items:
 			if self.classID in _allClassPeerProvisionsByItem_dict[i]:
 				self.peerProvisions_dict[i] = _allClassPeerProvisionsByItem_dict[i][self.classID]
 
@@ -54,8 +54,8 @@ class OParkClass:
 
 		return self.peerProvisions_dict[_peerProvItem]
 
-	def get_friendship_mat(self):
-		return self.friendships_mat
+	def get_friendship_dict(self, _studentID):
+		return self.friendships_dict[_studentID]
 
 # Set up the new class
 class OParkStudent:
@@ -65,22 +65,42 @@ class OParkStudent:
 		self.studentID = _studentID
 		self.gender = _gender
 
-	def set_received_peerprov_mat(self, _OPclass):
+	def set_received_peerprov_df(self, _OPclass):
 
-		self.receivedPeerProv_mat = pd.DataFrame(index = _OPclass.get_studentIDs(),
-											   columns = list(_OPclass.peerProvisions_dict.keys()),
-											   dtype = int
-											  )
+		self.receivedPeerProv_df = pd.DataFrame(index = _OPclass.get_studentIDs(),
+											    columns = list(_OPclass.peerProvisions_dict.keys()),
+											    dtype = int
+											   )
 
 		# Fill in the data frame from the OParkClass
 		for item, prov_df in _OPclass.peerProvisions_dict.items():
-			self.receivedPeerProv_mat.loc[:,item] = prov_df.loc[:,self.studentID]
+			self.receivedPeerProv_df.loc[:,item] = prov_df.loc[:,self.studentID]
+			
+		# Remove the current student from the matrix
+		self.receivedPeerProv_df.drop(index = self.studentID, inplace = True)
 
 	def set_received_friendships(self, _OPclass):
 
-		friendship_mat = _OPclass.get_friendship_mat()
-		i = _OPclass.get_studentID_index(self.studentID)
-		self.receivedFriendships = friendship_mat[i,:]
+		self.receivedFriendships = _OPclass.get_friendship_dict(self.studentID)
+				
+		# Remove the current student from the vector
+		self.receivedFriendships.drop(index = self.studentID, inplace = True)
+		
+	def set_provision_received_by_friendship_status(self):
+		
+		# Initialize the storage dataframe
+		columnNames = ["Reciprocal_OnlyReceive", "Reciprocal_All"]
+		
+		self.receivedPeerProvByFriendshipStatus_df = pd.DataFrame(index = self.receivedPeerProv_df.columns,
+															      columns = columnNames,
+																  dtype = float
+																 )
+		
+		# Iterate through each item
+		#for itemNum in self.receivedPeerProvByFriendshipStatus_df.index:
+			
+			# Get the total number of classmates (excluding current student)
+		
 
 
 
@@ -120,31 +140,39 @@ def GetPeerProvisions(_dir):
 	return classPeerProvisionByItem_dict
 
 
-def GetClassFriendshipMatrix(_friendship_df):
+def GetClassFriendshipForEachStudent(_friendship_df):
 
-	# Initialize the class_friendship_matrix
-	classFriendship_mat = np.empty(_friendship_df.shape, dtype = object)
+	# Initialize the class_friendship dict
+	classFriendship_dict = OrderedDict()
 
 	# Iterate through each row
-	for i in range(0, classFriendship_mat.shape[0]):
+	for i in _friendship_df.index:
 
-		for j in range(classFriendship_mat.shape[1]):
+		# Initialize the student series
+		studentFriendship_srs = pd.Series(index = _friendship_df.columns, dtype = str)
+		
+		for j in _friendship_df.columns:
 
 			# Get the given and received status
-			isGiven = True if _friendship_df.iloc[i, j] == 1 else False
-			isReceived = True if _friendship_df.iloc[i, j] == 1 else False
+			isGiven = True if _friendship_df.loc[i, j] == 1 else False
+			isReceived = True if _friendship_df.loc[i, j] == 1 else False
 
 			if isGiven and isReceived:
-				classFriendship_mat[i, j] = "reciprocated"
+				studentFriendship_srs.loc[j] = "reciprocated"
 			elif isGiven:
-				classFriendship_mat[i, j] = "given"
+				studentFriendship_srs.loc[j] = "given"
 			elif isReceived:
-				classFriendship_mat[i, j] = "received"
+				studentFriendship_srs.loc[j] = "received"
 			else:
-				classFriendship_mat[i, j] = "none"
+				studentFriendship_srs.loc[j] = "none"
+
+		# Drop the current student from the series
+		
+		# Add to the dict
+		classFriendship_dict[i] = studentFriendship_srs
 
 	# Return the friendship matrix
-	return classFriendship_mat
+	return classFriendship_dict
 
 parser = argparse.ArgumentParser()
 parser.add_argument("friendship_nom_file", help = "Friendship Nominations File (.xlsx)")
@@ -168,14 +196,14 @@ for c in class_sn:
 	# Import the nominations matrix
 	friendship_df, gender_srs = classmatrix.GetDataMatrix(wb[c])
 
-	# Get the friendship matrix
-	friendship_mat = GetClassFriendshipMatrix(friendship_df)
+	# Get the friendship dict
+	friendship_dict = GetClassFriendshipForEachStudent(friendship_df)
 
 	# Set the OParkStudent list
 	OPstudent_list = [OParkStudent(i, gender_srs.loc[i]) for i in gender_srs.index]
 
 	# Initialize an OPClass
-	orlandParkClass = OParkClass(c, OPstudent_list, friendship_mat, classPeerProvisionsByItem_dict)
+	orlandParkClass = OParkClass(c, OPstudent_list, friendship_dict, classPeerProvisionsByItem_dict)
 
 	break
 
@@ -183,7 +211,7 @@ wb.close()
 
 
 ops = OParkStudent(1502, 1)
-ops.set_received_peerprov_mat(orlandParkClass)
+ops.set_received_peerprov_df(orlandParkClass)
 ops.set_received_friendships(orlandParkClass)
 
 

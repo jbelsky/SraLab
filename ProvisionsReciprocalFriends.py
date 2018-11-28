@@ -12,6 +12,7 @@ import os
 import glob
 import argparse
 import re
+import itertools
 from collections import OrderedDict
 
 import classmatrix
@@ -88,19 +89,48 @@ class OParkStudent:
 		
 	def set_provision_received_by_friendship_status(self):
 		
-		# Initialize the storage dataframe
-		columnNames = ["Reciprocal_OnlyReceive", "Reciprocal_All"]
+		# Set the possible friendship types
+		friendshipTypes = ["reciprocated", "given", "received", "none"]
+		suffix = ["OnlyReceivedProv", "All"]
 		
-		self.receivedPeerProvByFriendshipStatus_df = pd.DataFrame(index = self.receivedPeerProv_df.columns,
+		# Set the column names
+		columnNames = ["_".join(x) for x in itertools.product(friendshipTypes, suffix)]
+		
+		# Initialize the storage dataframe
+		summaryByItem_df = pd.DataFrame(index = self.receivedPeerProv_df.columns,
 															      columns = columnNames,
 																  dtype = float
 																 )
 		
 		# Iterate through each item
-		#for itemNum in self.receivedPeerProvByFriendshipStatus_df.index:
+		for itemNum in summaryByItem_df.index:
 			
-			# Get the total number of classmates (excluding current student)
+			# Find the total number receiving provisions
+			totalRecProv = np.where(self.receivedPeerProv_df[itemNum] == 1)[0].shape[0]
+			classSize = np.where(self.receivedPeerProv_df[itemNum].isin([0, 1]))[0].shape[0]
+			
+			denom = (totalRecProv, classSize)
+			
+			for fr in friendshipTypes:
+				
+				frAndRec = (self.receivedFriendships == fr) & (self.receivedPeerProv_df[itemNum] == 1)
+				fr_recProv = np.where(frAndRec)[0].shape[0]
+
+				# Enter proportion into data frame
+				for i in (0, 1):
+					
+					if denom[i] > 0:
+						proportion = fr_recProv / denom[i]
+					else:
+						proportion = 9
+						
+					summaryByItem_df.loc[itemNum, "_".join([fr, suffix[i]])] = proportion
+				
+				
 		
+		self.receivedPeerProvByFriendshipStatus_df = summaryByItem_df
+			
+			
 
 
 
@@ -155,7 +185,7 @@ def GetClassFriendshipForEachStudent(_friendship_df):
 
 			# Get the given and received status
 			isGiven = True if _friendship_df.loc[i, j] == 1 else False
-			isReceived = True if _friendship_df.loc[i, j] == 1 else False
+			isReceived = True if _friendship_df.loc[j, i] == 1 else False
 
 			if isGiven and isReceived:
 				studentFriendship_srs.loc[j] = "reciprocated"
@@ -213,7 +243,8 @@ wb.close()
 ops = OParkStudent(1502, 1)
 ops.set_received_peerprov_df(orlandParkClass)
 ops.set_received_friendships(orlandParkClass)
-
+ops.set_provision_received_by_friendship_status()
+ops.receivedPeerProvByFriendshipStatus_df.to_csv("tmp.txt", sep = "\t", float_format = "%.4f", index_label = "Provision Item")
 
 '''
 # Initialize the provisions_matrix dict

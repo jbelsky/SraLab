@@ -55,7 +55,7 @@ class OParkClass:
 
 		return self.peerProvisions_dict[_peerProvItem]
 
-	def get_friendship_dict(self, _studentID):
+	def get_friendship_srs(self, _studentID):
 		return self.friendships_dict[_studentID]
 
 	def set_item_summary(self):
@@ -64,7 +64,7 @@ class OParkClass:
 		item_odict = OrderedDict()
 
 		# Set the columnNames
-		columnNames = self.students_list[0].receivedPeerProvByFriendshipStatus_df.columns
+		columnNames = self.students_list[0].metricByItem_df.columns
 
 		# Iterate through each item and get each OParkStudent statistics
 		for item in self.get_peer_provisions_items():
@@ -89,100 +89,73 @@ class OParkStudent:
 		self.studentID = _studentID
 		self.gender = _gender
 
+		self.oParkClass = None
+
+		# Initialize other variables
+		self.metricByItem_df = pd.DataFrame()
+		self.receivedPeerProv_df = pd.DataFrame()
+
 	def get_item_friendship_metrics(self, _itemNum):
 
-		return self.receivedPeerProvByFriendshipStatus_df.loc[_itemNum]
+		return self.metricByItem_df.loc[_itemNum]
 
-	def set_received_peerprov_df(self, _OPclass):
+	def set_oParkClass(self, _oParkClass):
+		self.oParkClass = _oParkClass
 
-		self.receivedPeerProv_df = pd.DataFrame(index = _OPclass.get_studentIDs(),
-											    columns = list(_OPclass.peerProvisions_dict.keys()),
+	def set_received_peerprov_df(self):
+
+		self.receivedPeerProv_df = pd.DataFrame(index = self.oParkClass.get_studentIDs(),
+											    columns = list(self.oParkClass.peerProvisions_dict.keys()),
 											    dtype = int
 											   )
 
 		# Fill in the data frame from the OParkClass
-		for item, prov_df in _OPclass.peerProvisions_dict.items():
+		for item, prov_df in self.oParkClass.peerProvisions_dict.items():
 			self.receivedPeerProv_df.loc[:,item] = prov_df.loc[:,self.studentID]
 
 		# Remove the current student from the matrix
 		self.receivedPeerProv_df.drop(index = self.studentID, inplace = True)
 
-	def set_received_friendships(self, _OPclass):
+	def set_received_friendships(self):
 
-		self.receivedFriendships = _OPclass.get_friendship_dict(self.studentID)
+		self.receivedFriendships = self.oParkClass.get_friendship_srs(self.studentID)
 
 		# Remove the current student from the vector
 		self.receivedFriendships.drop(index = self.studentID, inplace = True)
 
+	def get_number_of_item_fr_provs(self, _friendshipType, _provType, _itemNum):
+
+		fr = self.receivedFriendships == _friendshipType
+		prov =  self.receivedPeerProv_df[_itemNum] == _provType
+
+		return np.where(fr & prov)[0].shape[0]
+
 	def set_provision_received_by_friendship_status(self):
 
-		# Set the possible friendship types
-		friendshipTypes = ["reciprocated", "given", "received", "none"]
-		suffix = ["OnlyReceivedProv", "All"]
+		# Set the possible friendship and provision types
+		friendshipTypes = ["reciprocated", "given", "received", "none", "NA"]
+		provisionTypes = [0, 1, 9]
 
-		# Set the column names
-		columnNames = ["Number_ClassFriendshipsAvailable",
-						  "Number_Reciprocated",
-						  "Number_Given",
-						  "Number_Received",
-						  "Number_NoFriendships",
-						  "Number_NA_Friendships"
-						 ]
-		columnNames += ["_".join(x) for x in itertools.product(friendshipTypes, suffix)]
+		# Get the tuple groupings
+		frProvTypes = list(itertools.product(friendshipTypes, provisionTypes))
 
 		# Initialize the storage dataframe
-		summaryByItem_df = pd.DataFrame(index = self.receivedPeerProv_df.columns,
-											  columns = columnNames
-											 )
+		metricByItem_df = pd.DataFrame(index = self.receivedPeerProv_df.columns,
+											 columns = [fr + "," + str(prov) for fr, prov in frProvTypes]
+											)
 
 		# Iterate through each item
-		for itemNum in summaryByItem_df.index:
+		for itemNum in metricByItem_df.index:
 
-			# Find the total number receiving provisions
-			totalRecProv = np.where(self.receivedPeerProv_df[itemNum] == 1)[0].shape[0]
-			classSize = np.where(self.receivedPeerProv_df[itemNum].isin([0, 1]))[0].shape[0]
+			# Initialize the storage_list
+			stats = []
+			for fr,prov in frProvTypes:
 
-			denom = (totalRecProv, classSize)
+				stats.append(self.get_number_of_item_fr_provs(fr, pr, itemNum))
 
-			# Set the total numbers
-			recipAndItem = get_number_of_item_friendship_provs
+			metricByItem_df.loc[itemNum] = stats
 
-
-
-
-			summaryByItem_df.loc[itemNum, "Number_ClassFriendshipsAvailable"] = classSize
-			summaryByItem_df.loc[itemNum, "Number_Reciprocated"] = np.where((self.receivedFriendships == "reciprocated") & (self.receivedPeerProv_df[itemNum].isin([0, 1]))[0].shape[0]
-			summaryByItem_df.loc[itemNum, "Number_Given"] = np.where(self.receivedFriendships == "given")[0].shape[0]
-			summaryByItem_df.loc[itemNum, "Number_Received"] = np.where(self.receivedFriendships == "received")[0].shape[0]
-			summaryByItem_df.loc[itemNum, "Number_NoFriendships"] = np.where(self.receivedFriendships == "none")[0].shape[0]
-			summaryByItem_df.loc[itemNum, "Number_NA_Friendships"] = np.where(self.receivedFriendships == "NA")[0].shape[0]
-
-			for fr in friendshipTypes:
-
-				frAndRec = (self.receivedFriendships == fr) & (self.receivedPeerProv_df[itemNum] == 1)
-				fr_recProv = np.where(frAndRec)[0].shape[0]
-
-				# Enter proportion into data frame
-				for i in (0, 1):
-
-					if denom[i] > 0:
-						proportion = fr_recProv / denom[i]
-					else:
-						proportion = 9
-
-					summaryByItem_df.loc[itemNum, "_".join([fr, suffix[i]])] = proportion
-
-		self.receivedPeerProvByFriendshipStatus_df = summaryByItem_df
-
-	def get_number_friendship_type(self, _friendshipType):
-
-		return np.where(self.receivedFriendships == _friendshipType)[0].shape[0]
-
-	def get_number_of_item_friendship_provs(self, _friendshipType, _itemNum):
-
-		frAndRec = (self.receivedFriendships == _friendshipType) & (self.receivedPeerProv_df[_itemNum] == 1)
-
-		return np.where(frAndRec)[0].shape[0]
+		self.metricByItem_df = metricByItem_df
 
 
 def GetPeerProvisions(_dir):
@@ -234,9 +207,16 @@ def GetClassFriendshipForEachStudent(_friendship_df):
 
 		for j in _friendship_df.columns:
 
+			given = _friendship_df.loc[i, j]
+			received = _friendship_df.loc[j, i]
+
+			if (given == 9) & (received == 9):
+				studentFriendship_srs.loc[j] = "NA"
+				continue
+
 			# Get the given and received status
-			isGiven = True if _friendship_df.loc[i, j] == 1 else False
-			isReceived = True if _friendship_df.loc[j, i] == 1 else False
+			isGiven = True if given == 1 else False
+			isReceived = True if received == 1 else False
 
 			if isGiven and isReceived:
 				studentFriendship_srs.loc[j] = "reciprocated"
@@ -244,14 +224,8 @@ def GetClassFriendshipForEachStudent(_friendship_df):
 				studentFriendship_srs.loc[j] = "given"
 			elif isReceived:
 				studentFriendship_srs.loc[j] = "received"
-
-			# NOTE: what to do about 9s for friendships?
-			elif (_friendship_df.loc[i,j] == 9) | (_friendship_df.loc[j,i] == 9):
-				studentFriendship_srs.loc[j] = "NA"
 			else:
 				studentFriendship_srs.loc[j] = "none"
-
-		# Drop the current student from the series
 
 		# Add to the dict
 		classFriendship_dict[i] = studentFriendship_srs
@@ -295,8 +269,9 @@ for c in class_sn[0:5]:
 	# Iterate through each OParkStudent
 	for ops in OPstudent_list:
 
-		ops.set_received_peerprov_df(orlandParkClass)
-		ops.set_received_friendships(orlandParkClass)
+		ops.set_oParkClass(orlandParkClass)
+		ops.set_received_peerprov_df()
+		ops.set_received_friendships()
 		ops.set_provision_received_by_friendship_status()
 
 	# Get the class item summary
@@ -305,8 +280,13 @@ for c in class_sn[0:5]:
 	# Store the item statistics in the dict
 	OPclass_dict[c] = orlandParkClass.itemStat_odict
 
+	break
+
 wb.close()
 
+ops = OPstudent_list[0]
+
+'''
 # Create the output workbook
 f_out = "FriendshipPeerProvisionsByItemAnalysis.xlsx"
 writer= pd.ExcelWriter(f_out)
@@ -326,3 +306,4 @@ for i in items[0:3]:
 	itemByClass_df.to_excel(writer, sheet_name = "Item_" + str(i), float_format = "%.4f", freeze_panes = (1, 1))
 
 writer.save()
+'''

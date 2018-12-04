@@ -151,7 +151,7 @@ class OParkStudent:
 			stats = []
 			for fr,prov in frProvTypes:
 
-				stats.append(self.get_number_of_item_fr_provs(fr, pr, itemNum))
+				stats.append(self.get_number_of_item_fr_provs(fr, prov, itemNum))
 
 			metricByItem_df.loc[itemNum] = stats
 
@@ -210,7 +210,7 @@ def GetClassFriendshipForEachStudent(_friendship_df):
 			given = _friendship_df.loc[i, j]
 			received = _friendship_df.loc[j, i]
 
-			if (given == 9) & (received == 9):
+			if (given == 9) | (received == 9):
 				studentFriendship_srs.loc[j] = "NA"
 				continue
 
@@ -250,7 +250,7 @@ class_sn.sort()
 # Set up the friendship_matrix dict
 OPclass_dict = OrderedDict()
 
-for c in class_sn[0:5]:
+for c in class_sn:
 
 	print("Working on %s..." % c)
 
@@ -280,13 +280,8 @@ for c in class_sn[0:5]:
 	# Store the item statistics in the dict
 	OPclass_dict[c] = orlandParkClass.itemStat_odict
 
-	break
-
 wb.close()
 
-ops = OPstudent_list[0]
-
-'''
 # Create the output workbook
 f_out = "FriendshipPeerProvisionsByItemAnalysis.xlsx"
 writer= pd.ExcelWriter(f_out)
@@ -294,7 +289,7 @@ writer= pd.ExcelWriter(f_out)
 # Iterate through each item
 items = list(classPeerProvisionsByItem_dict.keys())
 items.sort()
-for i in items[0:3]:
+for i in items:
 
 	# Get all the dataframes for the item in one list
 	itemByClass = []
@@ -306,4 +301,3 @@ for i in items[0:3]:
 	itemByClass_df.to_excel(writer, sheet_name = "Item_" + str(i), float_format = "%.4f", freeze_panes = (1, 1))
 
 writer.save()
-'''

@@ -138,22 +138,46 @@ class OParkStudent:
 
 		# Get the tuple groupings
 		frProvTypes = list(itertools.product(friendshipTypes, provisionTypes))
+		df_columns = [fr + "," + str(prov) for fr, prov in frProvTypes]
+		df_columns += ["ClassSize_FriendshipProvisionDefined", "NumberPeerProvisionsReceived"]
+
+		frProvPropTypes = list(itertools.product(friendshipTypes[0:4], ["ClassSizeProp", "ReceivedProvisionProp"]))
+		df_columns += ["_".join(tup) for tup in frProvPropTypes]
 
 		# Initialize the storage dataframe
 		metricByItem_df = pd.DataFrame(index = self.receivedPeerProv_df.columns,
-											 columns = [fr + "," + str(prov) for fr, prov in frProvTypes]
+											 columns = df_columns
 											)
 
 		# Iterate through each item
 		for itemNum in metricByItem_df.index:
 
-			# Initialize the storage_list
-			stats = []
 			for fr,prov in frProvTypes:
 
-				stats.append(self.get_number_of_item_fr_provs(fr, prov, itemNum))
+				metricByItem_df.loc[itemNum, fr + "," + str(prov)] = self.get_number_of_item_fr_provs(fr, prov, itemNum)
 
-			metricByItem_df.loc[itemNum] = stats
+			# Get additional stats for the classes
+			# Get sum of provisions types where friendship/provision is defined
+			subsetCols = ~metricByItem_df.columns.str.contains("NA|,9", case = True, regex = True)
+			metricByItem_df.loc[itemNum, "ClassSize_FriendshipProvisionDefined"] = metricByItem_df.loc[itemNum, subsetCols].sum()
+
+			# Get the number of received provisions
+			subsetCols = metricByItem_df.columns.str.contains("^(?!NA).*,1", case = True, regex = True)
+			metricByItem_df.loc[itemNum, "NumberPeerProvisionsReceived"] = metricByItem_df.loc[itemNum, subsetCols].sum()
+
+			# Get the proportions
+			for fr,size in frProvPropTypes:
+				frProvRec = metricByItem_df.loc[itemNum, fr + ",1"]
+				if size == "ClassSizeProp":
+					denom = metricByItem_df.loc[itemNum, "ClassSize_FriendshipProvisionDefined"]
+				elif size == "ReceivedProvisionProp":
+					denom = metricByItem_df.loc[itemNum, "NumberPeerProvisionsReceived"]
+
+				# Get the ratio (if denominator of ratio is 0, define as 0)
+				try:
+					metricByItem_df.loc[itemNum, fr + "_" + size] = frProvRec / denom
+				except:
+					metricByItem_df.loc[itemNum, fr + "_" + size] = 0
 
 		self.metricByItem_df = metricByItem_df
 

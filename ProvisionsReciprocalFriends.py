@@ -97,68 +97,68 @@ if __name__ == "__main__":
 	parser = argparse.ArgumentParser()
 	parser.add_argument("friendship_nom_file", help = "Friendship Nominations File (.xlsx)")
 	parser.add_argument("peer_provisions_dir", help = "Directory containing peer provisions")
-	parser.add_argument("-o", "--output", action = "store", default = "compare_excel_dirs.txt", type = str)
+	parser.add_argument("-o", "--output", action = "store", default = "FriendshipPeerProvisionsByItemAnalysis.xlsx", type = str)
 	args = parser.parse_args()
-	
+
 	# Get the peer provisions for each of the classes
 	classPeerProvisionsByItem_dict = GetPeerProvisions(args.peer_provisions_dir)
-	
+
 	# Load in the friendship matrix
 	wb = openpyxl.load_workbook(args.friendship_nom_file)
 	class_sn = wb.sheetnames
 	class_sn.sort()
-	
+
 	# Set up the friendship_matrix dict
 	OPclass_dict = OrderedDict()
-	
+
 	for c in class_sn:
-	
+
 		print("Working on %s..." % c)
-	
+
 		# Import the nominations matrix
 		friendship_df, gender_srs = classmatrix.GetDataMatrix(wb[c])
-	
+
 		# Get the friendship dict
 		friendship_dict = GetClassFriendshipForEachStudent(friendship_df)
-	
+
 		# Set the OParkStudent list
 		OPstudent_list = [OParkStudent.OParkStudent(i, gender_srs.loc[i]) for i in gender_srs.index]
-	
+
 		# Initialize an OPClass
 		orlandParkClass = OParkClass.OParkClass(c, OPstudent_list, friendship_dict, classPeerProvisionsByItem_dict)
-	
+
 		# Iterate through each OParkStudent
 		for ops in OPstudent_list:
-	
+
 			ops.set_oParkClass(orlandParkClass)
 			ops.set_received_peerprov_df()
 			ops.set_received_friendships()
 			ops.set_provision_received_by_friendship_status()
-	
+
 		# Get the class item summary
 		orlandParkClass.set_item_summary()
-	
+
 		# Store the item statistics in the dict
 		OPclass_dict[c] = orlandParkClass.itemStat_odict
-	
+
 	wb.close()
-	
+
 	# Create the output workbook
 	f_out = "FriendshipPeerProvisionsByItemAnalysis.xlsx"
 	writer= pd.ExcelWriter(f_out)
-	
+
 	# Iterate through each item
 	items = list(classPeerProvisionsByItem_dict.keys())
 	items.sort()
 	for i in items:
-	
+
 		# Get all the dataframes for the item in one list
 		itemByClass = []
 		for c, opc_d in OPclass_dict.items():
 			itemByClass.append(opc_d[i])
-	
+
 		# Write the excel worksheet
 		itemByClass_df = pd.concat(itemByClass, axis = 0, join = "inner")
 		itemByClass_df.to_excel(writer, sheet_name = "Item_" + str(i), float_format = "%.4f", freeze_panes = (1, 1))
-	
+
 	writer.save()

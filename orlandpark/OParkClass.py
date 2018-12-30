@@ -23,6 +23,20 @@ class OParkClass:
 
 		return [s.studentID for s in self.students_list]
 
+	def get_studentID(self, _studentID):
+
+		studentID_list = self.get_studentIDs()
+		oParkStudent_idx = studentID_list.index(_studentID)
+
+		return self.students_list()[oParkStudent_idx]
+
+	def get_student_genders(self):
+
+		return pd.Series(index = self.get_studentIDs(),
+                         data = [s.gender for s in self.students_list],
+						 dtype = int
+                        )
+
 	def get_studentID_index(self, _studentID):
 
 		studentID_list = self.get_studentIDs()

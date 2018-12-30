@@ -52,6 +52,45 @@ class OParkStudent:
 
 		return np.where(fr & prov)[0].shape[0]
 
+	def get_friendship_prov_gender(self, _friendshipType, _provType, _itemNum, _genderType):
+
+		fr = self.receivedFriendships == _friendshipType
+		prov = self.receivedPeerProv_df[_itemNum] == _provType
+
+		# Get the class genders and drop the current studentID
+		classGenders = self.oParkClass.get_student_genders()
+		classGenders.drop(index = self.studentID, inplace = True)
+
+		# Get the selection
+		if _genderType == "sameGender":
+			genderID = self.studentID
+		elif _genderType == "crossGender":
+			genderID = 1 - self.studentID
+
+		gend = classGenders == genderID
+
+		return np.where(fr & prov & gend)[0].shape[0]
+
+	def set_provision_stats(self):
+
+		# Set the possible friendship and provision types
+		friendshipTypes = ["reciprocated", "given", "received", "none", "NA"]
+		provisionTypes = [0, 1, 9]
+		genderSubsets = ["sameGender", "crossGender"]
+
+		# Get the tuple groupings
+		frProvTypes = list(itertools.product(friendshipTypes, provisionTypes, genderSubsets))
+		df_columns = [",".join([str(y) for y in x]) for x in frProvTypes]
+		df_columns += ["ClassSize_FriendshipProvisionDefined", "NumberPeerProvisionsReceived"]
+
+		# Initialize the storage dataframe
+		metricByItem_df = pd.DataFrame(index = self.receivedPeerProv_df.columns,
+                                       columns = df_columns
+                                      )
+
+		return metricByItem_df
+
+
 	def set_provision_received_by_friendship_status(self):
 
 		# Set the possible friendship and provision types

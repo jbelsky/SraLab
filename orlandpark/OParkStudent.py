@@ -40,10 +40,10 @@ class OParkStudent:
 
 	def set_received_friendships(self):
 
-		self.receivedFriendships = self.oParkClass.get_friendship_srs(self.studentID)
+		receivedFriendships = self.oParkClass.get_friendship_srs(self.studentID)
 
 		# Remove the current student from the vector
-		self.receivedFriendships.drop(index = self.studentID, inplace = True)
+		self.receivedFriendships = receivedFriendships.drop(index = self.studentID)
 
 	def get_number_of_item_fr_provs(self, _friendshipType, _provType, _itemNum):
 
@@ -52,14 +52,13 @@ class OParkStudent:
 
 		return np.where(fr & prov)[0].shape[0]
 
-	def get_friendship_prov_gender(self, _friendshipType, _provType, _itemNum, _genderType):
+	def get_friendship_prov_gender(self, _friendshipType, _provType, _genderType, _itemNum):
 
 		fr = self.receivedFriendships == _friendshipType
 		prov = self.receivedPeerProv_df[_itemNum] == _provType
 
 		# Get the class genders and drop the current studentID
-		classGenders = self.oParkClass.get_student_genders()
-		classGenders.drop(index = self.studentID, inplace = True)
+		classGenders = self.oParkClass.get_friendship_genders(self.studentID)
 
 		# Get the selection
 		if _genderType == "sameGender":
@@ -79,16 +78,29 @@ class OParkStudent:
 		genderSubsets = ["sameGender", "crossGender"]
 
 		# Get the tuple groupings
-		frProvTypes = list(itertools.product(friendshipTypes, provisionTypes, genderSubsets))
-		df_columns = [",".join([str(y) for y in x]) for x in frProvTypes]
-		df_columns += ["ClassSize_FriendshipProvisionDefined", "NumberPeerProvisionsReceived"]
+		frProvGend = list(itertools.product(friendshipTypes, provisionTypes, genderSubsets))
+		df_columns = [",".join([str(y) for y in x]) for x in frProvGend]
+		# df_columns += ["ClassSize_FriendshipProvisionDefined", "NumberPeerProvisionsReceived"]
 
 		# Initialize the storage dataframe
 		metricByItem_df = pd.DataFrame(index = self.receivedPeerProv_df.columns,
                                        columns = df_columns
                                       )
 
-		return metricByItem_df
+		# Iterate through each item
+		for itemNum in metricByItem_df.index:
+
+			for fpg in frProvGend:
+
+				# Get the friendship, provision, and gender types
+				fr = fpg[0]
+				pr = fpg[1]
+				ge = fpg[2]
+
+				frPrGeItemCt = self.get_friendship_prov_gender(fr, pr, ge, itemNum)
+				metricByItem_df.loc[itemNum, ",".join([str(y) for y in fpg])] = frPrGeItemCt
+
+		self.metricByItem_df = metricByItem_df
 
 
 	def set_provision_received_by_friendship_status(self):

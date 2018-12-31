@@ -37,6 +37,16 @@ class OParkClass:
 						 dtype = int
                         )
 
+	def get_friendship_genders(self, _studentID):
+
+		friendshipGenders = pd.Series(index = self.get_studentIDs(),
+                                      data = [s.gender for s in self.students_list],
+                                      dtype = int
+                                     )
+
+		# Remove the current student
+		return friendshipGenders.drop(index = _studentID)
+
 	def get_studentID_index(self, _studentID):
 
 		studentID_list = self.get_studentIDs()

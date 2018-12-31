@@ -48,10 +48,18 @@ OPstudent_list = [OParkStudent.OParkStudent(i, gender_srs.loc[i]) for i in gende
 # Initialize an OPClass
 orlandParkClass = OParkClass.OParkClass("Class 15", OPstudent_list, friendship_dict, classPeerProvisionsByItem_dict)
 
-ops = OParkStudentDict[1501]
+ops = OParkStudentDict[1510]
 ops.set_oParkClass(orlandParkClass)
 ops.set_received_peerprov_df()
 ops.set_received_friendships()
 ops.set_provision_received_by_friendship_status()
 
-print(ops.get_friendship_prov_gender("reciprocated", 0, 1, "sameGender"))
+ops.set_provision_stats()
+
+for i in range(1, 13):
+	for f in ["reciprocated", "given", "received", "none"]:
+		for g in [0, 1, 9]:
+			a = ops.get_friendship_prov_gender(f, g, "sameGender", i)
+			b = ops.get_friendship_prov_gender(f, g, "crossGender", i)
+			c = a + b
+			print("%s:\t%d\t%d\t%d" % (f + "," + str(g), a, b, c))

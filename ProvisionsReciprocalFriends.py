@@ -136,8 +136,6 @@ if __name__ == "__main__":
 			ops.set_provision_received_by_friendship_status()
 			metric_df = ops.set_provision_stats()
 
-		break
-
 		# Get the class item summary
 		orlandParkClass.set_item_summary()
 

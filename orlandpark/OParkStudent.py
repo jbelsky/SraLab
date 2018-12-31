@@ -63,9 +63,9 @@ class OParkStudent:
 
 		# Get the selection
 		if _genderType == "sameGender":
-			genderID = self.studentID
+			genderID = self.gender
 		elif _genderType == "crossGender":
-			genderID = 1 - self.studentID
+			genderID = 1 - self.gender
 
 		gend = classGenders == genderID
 

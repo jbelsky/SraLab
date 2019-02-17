@@ -15,18 +15,16 @@ import argparse
 import re
 from collections import OrderedDict
 
-sys.path.append("..")
-
 import classmatrix
 import OParkClass
 import OParkStudent
-from ProvisionsReciprocalFriends import GetPeerProvisions, GetClassFriendshipForEachStudent
+from OrlandParkUtils import GetPeerProvisions, GetClassFriendshipForEachStudent
 
 # Get the peer provisions for each of the classes
-classPeerProvisionsByItem_dict = GetPeerProvisions("C:/Programs/cygwin64/home/jab112/SraLab/data/Orland_Park/Peer_Provisions")
+#classPeerProvisionsByItem_dict = GetPeerProvisions("C:/Programs/cygwin64/home/jab112/github/SraLab/data/Orland_Park/Peer_Provisions")
 
 # Load in the friendship matrix
-wb = openpyxl.load_workbook("C:/Programs/cygwin64/home/jab112/SraLab/data/Orland_Park/Friendship_Nominations/Socallb item 5 Unlimited Friend Noms 5.17.17.xlsx")
+wb = openpyxl.load_workbook("C:/Programs/cygwin64/home/jab112/github/SraLab/data/Orland_Park/Friendship_Nominations/Socallb item 5 Unlimited Friend Noms 5.17.17.xlsx")
 class_sn = wb.sheetnames
 class_sn.sort()
 
@@ -34,7 +32,29 @@ class_sn.sort()
 friendship_df, gender_srs = classmatrix.GetDataMatrix(wb["Class 15"])
 
 # Get the friendship dict
-friendship_dict = GetClassFriendshipForEachStudent(friendship_df)
+friendship_dict = GetClassFriendshipForEachStudent(friendship_df, gender_srs)
+
+
+stID = list(friendship_dict.keys())
+stID.sort()
+
+for s in stID:
+
+	st_df = friendship_dict[s]
+	frTypes = st_df["Type"].value_counts()
+	fr_d = {}
+
+	for t in ["reciprocated", "given", "received", "none", "NA"]:
+
+		if t in frTypes.index:
+			fr_d[t] = frTypes.loc[t]
+		else:
+			fr_d[t] = 0
+
+	print("%d\t%d\t%d\t%d\t%d\t%d\n" % (s, fr_d["reciprocated"], fr_d["given"], fr_d["received"], fr_d["none"], fr_d["NA"]))
+
+'''
+
 
 OParkStudentDict = OrderedDict()
 for i in gender_srs.index:
@@ -63,3 +83,4 @@ for i in range(1, 13):
 			b = ops.get_friendship_prov_gender(f, g, "crossGender", i)
 			c = a + b
 			print("%s:\t%d\t%d\t%d" % (f + "," + str(g), a, b, c))
+'''

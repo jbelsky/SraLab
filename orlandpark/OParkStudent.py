@@ -8,11 +8,10 @@ import OParkFriend
 # Set up the new OParkStudent class
 class OParkStudent:
 
-	def __init__(self, _studentID, _gender, ARG_OPARKCLASS = None):
+	def __init__(self, ARG_STUDENT_ID, ARG_GENDER, ARG_OPARKCLASS = None):
 
-		self.studentID = _studentID
-		self.gender = _gender
-
+		self.studentID = ARG_STUDENT_ID
+		self.gender = ARG_GENDER
 		self.friends = OrderedDict()
 
 		# Initialize other variables
@@ -35,12 +34,27 @@ class OParkStudent:
 	def get_id(self):
 		return self.studentID
 
+	def get_gender(self):
+		return self.gender
+
+	def get_summary_by_friendship(self, ARG_FRIENDSHIP_TYPE, ARG_GENDER_TYPE = "all"):
+
+		# Initialize the ct
+		ct = 0
+		
+		for i, opf in self.friends.items():
+
+			if opf.get_friendship_type() == ARG_FRIENDSHIP_TYPE:
+
+				if ARG_GENDER_TYPE == "all" or opf.get_gender_relationship() == ARG_GENDER_TYPE:
+					ct += 1
+
+		return ct
+
 	def get_item_friendship_metrics(self, _itemNum):
 
 		return self.metricByItem_df.loc[_itemNum]
 
-	def set_oParkClass(self, _oParkClass):
-		self.oParkClass = _oParkClass
 
 	def set_received_peerprov_df(self):
 

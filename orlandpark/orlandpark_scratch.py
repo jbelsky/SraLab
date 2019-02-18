@@ -39,6 +39,15 @@ oparkclass15 = OParkClass.OParkClass("Class 15")
 oparkclass15.initialize_students(gender_srs)
 oparkclass15.initialize_friends(friendship_df)
 
+oparkstudent1503 = oparkclass15.students[1503]
+
+for f in ["reciprocated", "given", "received", "none", "NA"]:
+
+	for g in ["all", "same", "cross"]:
+
+		num = oparkstudent1503.get_summary_by_friendship(f, g)
+		print(f + "\t" + g + "\t" + str(num))
+
 # Get the friendship dict
 #friendship_dict = OrlandParkUtils.GetClassFriendshipForEachStudent(friendship_df, gender_srs)
 

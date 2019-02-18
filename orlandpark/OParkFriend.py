@@ -14,10 +14,14 @@ class OParkFriend:
 
 	def get_gender_relationship(self):
 
-		if self.ops.gender == self.opsFriend:
+		if self.ops.get_gender() == self.opsFriend.get_gender():
 			return "same"
 		else:
 			return "cross"
+
+	def get_friendship_type(self):
+
+		return self.friendType
 
 	def set_provision(self, ARG_PROVISION, ARG_GIVEN):
 

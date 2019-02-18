@@ -48,6 +48,15 @@ for f in ["reciprocated", "given", "received", "none", "nominated", "not nominat
 		num = oparkstudent1503.get_summary_by_friendship(f, g)
 		print(f + "\t" + g + "\t" + str(num))
 
+for g in ["all", "same", "cross"]:
+
+		num = 0
+		num += oparkstudent1503.get_summary_by_friendship("reciprocated", g)
+		num += oparkstudent1503.get_summary_by_friendship("given", g)
+		num += oparkstudent1503.get_summary_by_friendship("nominated", g)
+
+		print("Total Nominated (" + g + ")\t" + str(num))
+
 # Get the friendship dict
 #friendship_dict = OrlandParkUtils.GetClassFriendshipForEachStudent(friendship_df, gender_srs)
 

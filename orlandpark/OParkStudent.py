@@ -8,6 +8,10 @@ import OParkFriend
 # Set up the new OParkStudent class
 class OParkStudent:
 
+	FRIENDSHIP_TYPES = ["reciprocated", "given", "received", "none", "nominated", "not nominated", "NA"]
+	NOMINATED_FRIENDSHIP_TYPES = ["reciprocated", "given", "nominated"]
+	GENDER_SUBSET = ["all", "same", "cross"]
+
 	def __init__(self, ARG_STUDENT_ID, ARG_GENDER, ARG_OPARKCLASS = None):
 
 		self.studentID = ARG_STUDENT_ID
@@ -50,6 +54,41 @@ class OParkStudent:
 					ct += 1
 
 		return ct
+
+	def get_number_of_friendship_types(self):
+
+		frGenPairs = list(itertools.product(OParkStudent.FRIENDSHIP_TYPES, OParkStudent.GENDER_SUBSET))
+		cts = []
+
+		for f, g in frGenPairs:
+
+			cts.append(self.get_summary_by_friendship(f, g))
+
+		return pd.Series(cts, index = ["%s (%s)" % x for x in frGenPairs])
+
+	def get_number_of_nominations(self):
+
+		cts = []
+		for g in OParkStudent.GENDER_SUBSET:
+
+			num = 0
+
+			for f in OParkStudent.NOMINATED_FRIENDSHIP_TYPES:
+
+				num += self.get_summary_by_friendship(f, g)
+
+			cts.append(num)
+
+		return pd.Series(cts, index = ["total nominated (%s)" % i for i in OParkStudent.GENDER_SUBSET])
+
+
+
+
+
+
+
+
+
 
 	def get_item_friendship_metrics(self, _itemNum):
 

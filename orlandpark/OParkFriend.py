@@ -37,9 +37,9 @@ class OParkFriend:
 
 		if given == 9:
 			fsType = "NA"
-		if received == 9 and given == 1:
+		elif received == 9 and given == 1:
 			fsType = "nominated"
-		if received == 9 and given == 0:
+		elif received == 9 and given == 0:
 			fsType = "not nominated"
 		elif given == 1 and received == 1:
 			fsType = "reciprocated"

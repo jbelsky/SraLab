@@ -27,6 +27,17 @@ class OParkClass:
 				self.peerProvisions_dict[i] = _allClassPeerProvisionsByItem_dict[i][self.classID]
 	'''
 
+	def get_studentIDs(self):
+
+		return [s.studentID for s in self.students_list]
+
+	def get_studentID(self, _studentID):
+
+		studentID_list = self.get_studentIDs()
+		oParkStudent_idx = studentID_list.index(_studentID)
+
+		return self.students_list()[oParkStudent_idx]
+
 	def initialize_students(self, ARG_GENDER_SRS):
 
 		for i, g in ARG_GENDER_SRS.iteritems():
@@ -39,17 +50,27 @@ class OParkClass:
 
 			ops.init_class_friendships(self.students, ARG_FRIENDSHIP_DF)
 
+	def write_friendship_nom_summary(self, outFile):
 
-	def get_studentIDs(self):
+		fO = open(outFile, mode = "w")
 
-		return [s.studentID for s in self.students_list]
+		NEED_HEADER = True
 
-	def get_studentID(self, _studentID):
+		for i, ops in self.students.items():
 
-		studentID_list = self.get_studentIDs()
-		oParkStudent_idx = studentID_list.index(_studentID)
+			friendshipSummary = ops.get_number_of_friendship_types()
+			nominationSummary = ops.get_number_of_nominations()
 
-		return self.students_list()[oParkStudent_idx]
+			if NEED_HEADER:
+				fO.write("StudentID\t" + "\t".join(friendshipSummary.index.tolist() + nominationSummary.index.tolist()) + "\n")
+				NEED_HEADER = False
+
+			fO.write(str(i) + "\t" + "\t".join([str(x) for x in friendshipSummary] + [str(x) for x in nominationSummary]) + "\n")
+
+		fO.close()
+
+
+
 
 	def get_student_genders(self):
 

@@ -3,19 +3,37 @@ import numpy as np
 import itertools
 from collections import OrderedDict
 
+import OParkFriend
+
 # Set up the new OParkStudent class
 class OParkStudent:
 
-	def __init__(self, _studentID, _gender):
+	def __init__(self, _studentID, _gender, ARG_OPARKCLASS = None):
 
 		self.studentID = _studentID
 		self.gender = _gender
 
-		self.oParkClass = None
+		self.friends = OrderedDict()
 
 		# Initialize other variables
 		self.metricByItem_df = pd.DataFrame()
 		self.receivedPeerProv_df = pd.DataFrame()
+
+	def init_class_friendships(self, ARG_OPARKCLASS_STUDENTS, ARG_FRIENDSHIP_DF):
+
+		# Iterate through the other students in the class
+		for i, ops in ARG_OPARKCLASS_STUDENTS.items():
+
+			if i == self.get_id():
+				continue
+
+			opf = OParkFriend.OParkFriend(self, ops)
+			opf.set_friendship_type(ARG_FRIENDSHIP_DF)
+
+			self.friends[i] = opf
+
+	def get_id(self):
+		return self.studentID
 
 	def get_item_friendship_metrics(self, _itemNum):
 

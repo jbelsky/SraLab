@@ -18,23 +18,31 @@ from collections import OrderedDict
 import classmatrix
 import OParkClass
 import OParkStudent
-from OrlandParkUtils import GetPeerProvisions, GetClassFriendshipForEachStudent
+import OParkFriend
+import OrlandParkUtils
 
 # Get the peer provisions for each of the classes
 #classPeerProvisionsByItem_dict = GetPeerProvisions("C:/Programs/cygwin64/home/jab112/github/SraLab/data/Orland_Park/Peer_Provisions")
 
+friendshipMatrixFile = "C:/Programs/cygwin64/home/jab112/github/SraLab/data/Orland_Park/Friendship_Nominations/Socallb item 5 Unlimited Friend Noms 5.17.17.xlsx"
+
 # Load in the friendship matrix
-wb = openpyxl.load_workbook("C:/Programs/cygwin64/home/jab112/github/SraLab/data/Orland_Park/Friendship_Nominations/Socallb item 5 Unlimited Friend Noms 5.17.17.xlsx")
+wb = openpyxl.load_workbook(friendshipMatrixFile)
 class_sn = wb.sheetnames
 class_sn.sort()
 
 # Import the nominations matrix
 friendship_df, gender_srs = classmatrix.GetDataMatrix(wb["Class 15"])
 
+oparkclass15 = OParkClass.OParkClass("Class 15")
+
+oparkclass15.initialize_students(gender_srs)
+oparkclass15.initialize_friends(friendship_df)
+
 # Get the friendship dict
-friendship_dict = GetClassFriendshipForEachStudent(friendship_df, gender_srs)
+#friendship_dict = OrlandParkUtils.GetClassFriendshipForEachStudent(friendship_df, gender_srs)
 
-
+'''
 stID = list(friendship_dict.keys())
 stID.sort()
 
@@ -53,7 +61,6 @@ for s in stID:
 
 	print("%d\t%d\t%d\t%d\t%d\t%d\n" % (s, fr_d["reciprocated"], fr_d["given"], fr_d["received"], fr_d["none"], fr_d["NA"]))
 
-'''
 
 
 OParkStudentDict = OrderedDict()

@@ -1,10 +1,17 @@
 import pandas as pd
+import OParkStudent
 from collections import OrderedDict
 
 # Set up the new OPClass
 
 class OParkClass:
 
+	def __init__(self, ARG_CLASS_ID):
+
+		self.classID = ARG_CLASS_ID
+		self.students = OrderedDict()
+
+	'''
 	def __init__(self, _classID, _students_list, _friendship_dict, _allClassPeerProvisionsByItem_dict):
 
 		self.classID = _classID
@@ -18,6 +25,20 @@ class OParkClass:
 		for i in self.peerProvisions_items:
 			if self.classID in _allClassPeerProvisionsByItem_dict[i]:
 				self.peerProvisions_dict[i] = _allClassPeerProvisionsByItem_dict[i][self.classID]
+	'''
+
+	def initialize_students(self, ARG_GENDER_SRS):
+
+		for i, g in ARG_GENDER_SRS.iteritems():
+
+			self.students[i] = OParkStudent.OParkStudent(i, g, self)
+
+	def initialize_friends(self, ARG_FRIENDSHIP_DF):
+
+		for i, ops in self.students.items():
+
+			ops.init_class_friendships(self.students, ARG_FRIENDSHIP_DF)
+
 
 	def get_studentIDs(self):
 

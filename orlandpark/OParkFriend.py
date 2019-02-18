@@ -35,8 +35,12 @@ class OParkFriend:
 		given = ARG_FRIENDSHIP_DF.loc[stID1, stID2]
 		received = ARG_FRIENDSHIP_DF.loc[stID2, stID1]
 
-		if given == 9 or received == 9:
+		if given == 9:
 			fsType = "NA"
+		if received == 9 and given == 1:
+			fsType = "nominated"
+		if received == 9 and given == 0:
+			fsType = "not nominated"
 		elif given == 1 and received == 1:
 			fsType = "reciprocated"
 		elif given == 1 and received == 0:

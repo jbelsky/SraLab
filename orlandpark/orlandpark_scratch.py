@@ -41,7 +41,7 @@ oparkclass15.initialize_friends(friendship_df)
 
 oparkstudent1503 = oparkclass15.students[1503]
 
-for f in ["reciprocated", "given", "received", "none", "NA"]:
+for f in ["reciprocated", "given", "received", "none", "nominated", "not nominated", "NA"]:
 
 	for g in ["all", "same", "cross"]:
 

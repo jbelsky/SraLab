@@ -57,14 +57,14 @@ class OParkStudent:
 
 	def get_number_of_friendship_types(self):
 
-		frGenPairs = list(itertools.product(OParkStudent.FRIENDSHIP_TYPES, OParkStudent.GENDER_SUBSET))
+		frGenPairs = list(itertools.product(OParkStudent.FRIENDSHIP_TYPES[0:4], OParkStudent.GENDER_SUBSET))
 		cts = []
 
 		for f, g in frGenPairs:
 
 			cts.append(self.get_summary_by_friendship(f, g))
 
-		return pd.Series(cts, index = ["%s (%s)" % x for x in frGenPairs])
+		return pd.Series(cts, index = ["%s_%s" % x for x in frGenPairs])
 
 	def get_number_of_nominations(self):
 
@@ -79,7 +79,7 @@ class OParkStudent:
 
 			cts.append(num)
 
-		return pd.Series(cts, index = ["total nominated (%s)" % i for i in OParkStudent.GENDER_SUBSET])
+		return pd.Series(cts, index = ["total_nominated_%s" % i for i in OParkStudent.GENDER_SUBSET])
 
 
 

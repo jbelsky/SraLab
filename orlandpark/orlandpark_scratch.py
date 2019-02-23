@@ -38,24 +38,7 @@ oparkclass15 = OParkClass.OParkClass("Class 15")
 
 oparkclass15.initialize_students(gender_srs)
 oparkclass15.initialize_friends(friendship_df)
-
-oparkstudent1503 = oparkclass15.students[1503]
-
-for f in ["reciprocated", "given", "received", "none", "nominated", "not nominated", "NA"]:
-
-	for g in ["all", "same", "cross"]:
-
-		num = oparkstudent1503.get_summary_by_friendship(f, g)
-		print(f + "\t" + g + "\t" + str(num))
-
-for g in ["all", "same", "cross"]:
-
-		num = 0
-		num += oparkstudent1503.get_summary_by_friendship("reciprocated", g)
-		num += oparkstudent1503.get_summary_by_friendship("given", g)
-		num += oparkstudent1503.get_summary_by_friendship("nominated", g)
-
-		print("Total Nominated (" + g + ")\t" + str(num))
+oparkclass15.write_friendship_nom_summary("summaryFile.txt")
 
 # Get the friendship dict
 #friendship_dict = OrlandParkUtils.GetClassFriendshipForEachStudent(friendship_df, gender_srs)

@@ -50,24 +50,29 @@ class OParkClass:
 
 			ops.init_class_friendships(self.students, ARG_FRIENDSHIP_DF)
 
-	def write_friendship_nom_summary(self, outFile):
+	def get_friendship_nom_summary(self):
 
-		fO = open(outFile, mode = "w")
+		needsInit = True
 
-		NEED_HEADER = True
 
 		for i, ops in self.students.items():
 
 			friendshipSummary = ops.get_number_of_friendship_types()
 			nominationSummary = ops.get_number_of_nominations()
 
-			if NEED_HEADER:
-				fO.write("StudentID\t" + "\t".join(friendshipSummary.index.tolist() + nominationSummary.index.tolist()) + "\n")
-				NEED_HEADER = False
 
-			fO.write(str(i) + "\t" + "\t".join([str(x) for x in friendshipSummary] + [str(x) for x in nominationSummary]) + "\n")
+			if needsInit:
 
-		fO.close()
+				# Initialize a dataframe
+				df = pd.DataFrame(index = pd.Index(list(self.students.keys()), name = "StudentID"),
+								  columns = friendshipSummary.index.tolist() + nominationSummary.index.tolist()
+								 )
+
+				needsInit = False
+
+			df.loc[i] = [str(x) for x in friendshipSummary] + [str(x) for x in nominationSummary]
+
+		return df
 
 
 

@@ -21,9 +21,6 @@ import OParkStudent
 import OParkFriend
 import OrlandParkUtils
 
-# Get the peer provisions for each of the classes
-#classPeerProvisionsByItem_dict = GetPeerProvisions("C:/Programs/cygwin64/home/jab112/github/SraLab/data/Orland_Park/Peer_Provisions")
-
 friendshipMatrixFile = "C:/Programs/cygwin64/home/jab112/github/SraLab/data/Orland_Park/Friendship_Nominations/Socallb item 5 Unlimited Friend Noms 5.17.17.xlsx"
 
 # Load in the friendship matrix
@@ -31,17 +28,22 @@ wb = openpyxl.load_workbook(friendshipMatrixFile)
 class_sn = wb.sheetnames
 class_sn.sort()
 
-# Import the nominations matrix
-friendship_df, gender_srs = classmatrix.GetDataMatrix(wb["Class 15"])
+df_stor = []
 
-oparkclass15 = OParkClass.OParkClass("Class 15")
+# Iterate through each class
+for cl in class_sn:
 
-oparkclass15.initialize_students(gender_srs)
-oparkclass15.initialize_friends(friendship_df)
-oparkclass15.write_friendship_nom_summary("summaryFile.txt")
+	
 
-# Get the friendship dict
-#friendship_dict = OrlandParkUtils.GetClassFriendshipForEachStudent(friendship_df, gender_srs)
+	# Import the nominations matrix
+	friendship_df, gender_srs = classmatrix.GetDataMatrix(wb[cl])
+
+	opc15 = OParkClass.OParkClass(cl)
+
+	opc15.initialize_students(gender_srs)
+	opc15.initialize_friends(friendship_df)
+	my_df = opc15.get_friendship_nom_summary()
+	df_stor.append(my_df)
 
 '''
 stID = list(friendship_dict.keys())

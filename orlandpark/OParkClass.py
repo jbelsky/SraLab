@@ -72,6 +72,12 @@ class OParkClass:
 
 			df.loc[i] = [str(x) for x in friendshipSummary] + [str(x) for x in nominationSummary]
 
+			# Set all but "received" to "" if OParkStudent.missing = True (absent during nomination)
+			if ops.missing:
+				columnsKeep = ["received_" + x for x in OParkStudent.OParkStudent.GENDER_SUBSET]
+				columnsNA = df.columns.difference(columnsKeep)
+				df.loc[i, columnsNA] = ""
+
 		return df
 
 

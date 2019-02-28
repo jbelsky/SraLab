@@ -35,9 +35,7 @@ class OParkFriend:
 		given = ARG_FRIENDSHIP_DF.loc[stID1, stID2]
 		received = ARG_FRIENDSHIP_DF.loc[stID2, stID1]
 
-		if given == 9:
-			fsType = "NA"
-		elif received == 9 and given == 1:
+		if received == 9 and given == 1:
 			fsType = "nominated"
 		elif received == 9 and given == 0:
 			fsType = "not nominated"
@@ -49,6 +47,10 @@ class OParkFriend:
 			fsType = "received"
 		elif given == 0 and received == 0:
 			fsType = "none"
+		elif given == 9 and received == 1:
+			fsType = "received"
+		elif given == 9:
+			fsType = "NA"
 		else:
 			print("WARNING: Cannot determine friendshipType for '%d' and '%d'" % (stID1, stID2))
 			fsType = "UNDETERMINED"

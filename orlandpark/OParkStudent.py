@@ -17,12 +17,17 @@ class OParkStudent:
 		self.studentID = ARG_STUDENT_ID
 		self.gender = ARG_GENDER
 		self.friends = OrderedDict()
+		self.missing = False
 
 		# Initialize other variables
 		self.metricByItem_df = pd.DataFrame()
 		self.receivedPeerProv_df = pd.DataFrame()
 
 	def init_class_friendships(self, ARG_OPARKCLASS_STUDENTS, ARG_FRIENDSHIP_DF):
+
+		# Check if student is missing
+		if all(ARG_FRIENDSHIP_DF.loc[self.studentID] == 9):
+			self.missing = True
 
 		# Iterate through the other students in the class
 		for i, ops in ARG_OPARKCLASS_STUDENTS.items():

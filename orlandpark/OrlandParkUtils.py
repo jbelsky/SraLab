@@ -1,56 +1,63 @@
-# -*- coding: utf-8 -*-
-"""
-Created on Thu Nov 15 17:07:00 2018
-
-@author: BelskyJ
-"""
-
 import openpyxl
 import pandas as pd
 import os
 import glob
-import argparse
 import re
+import sys
 from collections import OrderedDict
+
+from . import classmatrix
 
 #from orlandpark import classmatrix
 #from orlandpark import OParkClass
 #from orlandpark import OParkStudent
 
-def GetPeerProvisions(_dir):
+def GetProvisions(ARG_PROV_DIR):
 
 	# Initialize the peerProvision matrix
-	classPeerProvisionByItem_dict = {}
+	provDict = {}
 
 	# Obtain the number of peer provision matrices
-	peerProv_xlsx_files = glob.glob(_dir + "/*xlsx")
-	peerProv_xlsx_files.sort()
+	provXlsxFiles = glob.glob(ARG_PROV_DIR + "/*xlsx")
+	provXlsxFiles.sort()
 
 	# Get the peer provision item -> file dict
-	p = re.compile("Peer provisions item (\d{1,2})_.*\.xlsx")
+	p1 = re.compile("Peer provisions (item \d{1,2})_.*\.xlsx")
+	p2 = re.compile("(Item \d{1,2})-.*\.xlsx")
 
-	for f in peerProv_xlsx_files:
+	for provXlsxFile in provXlsxFiles:
 
-		print(f)
+		print(provXlsxFile)
 
-		item = int(p.match(os.path.basename(f)).group(1))
-		classPeerProvisionByItem_dict[item] = {}
+		m1 = p1.match(os.path.basename(provXlsxFile))
+		m2 = p2.match(os.path.basename(provXlsxFile))
+		if m1:
+			item = m1.group(1)
+		elif m2:
+			item = m2.group(1)
+		else:
+			print("Could not extract 'item' from provision Excel filename!")
+			sys.exit(1)
 
-		pp_wb = openpyxl.load_workbook(f)
+		# Initialize the dict for the item
+		provDict[item] = {}
 
-		for OPclass in pp_wb.sheetnames:
+		# Open the Excel file
+		provXlsx = openpyxl.load_workbook(provXlsxFile)
 
-			if "Class" not in OPclass:
+		for className in provXlsx.sheetnames:
+
+			if "Class" not in className:
 				continue
 
-			data_df, gender_s = classmatrix.GetDataMatrix(pp_wb[OPclass])
+			data_df, gender_s = classmatrix.GetDataMatrix(provXlsx[className])
 
 			# Enter into dict
-			classPeerProvisionByItem_dict[item][OPclass] = data_df
+			provDict[item][className] = data_df
 
-		pp_wb.close()
+		provXlsx.close()
 
-	return classPeerProvisionByItem_dict
+	return provDict
 
 
 def GetClassFriendshipForEachStudent(_friendship_df, ARG_GENDER_SRS):

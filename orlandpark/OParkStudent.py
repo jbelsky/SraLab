@@ -3,7 +3,7 @@ import numpy as np
 import itertools
 from collections import OrderedDict
 
-import OParkFriend
+from . import OParkFriend
 
 # Set up the new OParkStudent class
 class OParkStudent:

@@ -1,5 +1,5 @@
 import pandas as pd
-import OParkStudent
+from . import OParkStudent
 from collections import OrderedDict
 
 # Set up the new OPClass

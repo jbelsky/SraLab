@@ -17,6 +17,9 @@ import glob
 import re
 import sys
 
+# Exclude the following student IDs
+STUDENT_IDS_SKIP = [2309, 2707, 2708, 4114, 4124, 4621, 4819]
+
 def GetDataRange(_np_arr):
 
 	# Find the beginning data type
@@ -33,8 +36,8 @@ def GetDataRange(_np_arr):
 		if type(_np_arr[i]) != int:
 			iEnd = i - 1
 			break
-	if iEnd == iStart:
-		iEnd = len(_np_arr)
+		else:
+			iEnd = i
 
 	return (iStart, iEnd)
 
@@ -79,6 +82,13 @@ def GetDataMatrix(_ws):
 	# Convert to data frame
 	data_df = pd.DataFrame(rowList, index = stuID_arr, columns = stuID_arr, dtype = int)
 	gender_s = pd.Series(gender_arr, index = stuID_arr, dtype = int)
+
+	# If present, drop any studentIDs that should be excluded
+	if any(data_df.index.isin(STUDENT_IDS_SKIP)):
+		stuID_drop = data_df.index[data_df.index.isin(STUDENT_IDS_SKIP)]
+		data_df.drop(index = stuID_drop, columns = stuID_drop, inplace = True)
+		gender_s.drop(index = stuID_drop, inplace = True)
+
 
 	# Return a data frame and gender dict
 	return (data_df, gender_s)

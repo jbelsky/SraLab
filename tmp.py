@@ -3,7 +3,7 @@ from orlandpark import OrlandParkUtils
 from orlandpark import classmatrix
 from orlandpark import OParkClass
 
-provDir = "C:/usr/GoogleDrive/Programming/SraLab/data/Behavioral Nomination Item data"
+provDir = "C:/usr/GoogleDrive/Programming/SraLab/data/tmp"
 behDict = OrlandParkUtils.GetProvisions(provDir)
 
 friendshipMatrixFile = "C:/Programs/cygwin64/home/jab112/github/SraLab/data/Orland_Park/Friendship_Nominations/Socallb item 5 Unlimited Friend Noms 5.17.17.xlsx"
@@ -27,15 +27,14 @@ for cl in class_sn[0:1]:
 
 	opc.initialize_students(gender_srs)
 
-	opc.initialize_provisions(behDict)
+	opc.initialize_friends(friendship_df)
 
-
-#	opc.initialize_friends(friendship_df)
 
 #	clOutput_df = opc.get_friendship_nom_summary()
 
-#	df_stor.append(clOutput_df)
+	ops = opc.students[1501]
 
+	item1 = opc.initialize_provisions(behDict)
 
 #combinedOutput_df = pd.concat(df_stor)
 

@@ -20,8 +20,8 @@ class OParkStudent:
 		self.missing = False
 
 		# Initialize other variables
-		self.metricByItem_df = pd.DataFrame()
-		self.receivedPeerProv_df = pd.DataFrame()
+		self.givenPeerProv = {}
+		self.receivedPeerProv = {}
 
 	def init_class_friendships(self, ARG_OPARKCLASS_STUDENTS, ARG_FRIENDSHIP_DF):
 
@@ -86,6 +86,15 @@ class OParkStudent:
 
 		return pd.Series(cts, index = ["total_nominated_%s" % i for i in OParkStudent.GENDER_SUBSET])
 
+	def get_provisions_received(self, ARG_PROV_DF):
+
+		# Subset on the column for the student
+		recColumn = ARG_PROV_DF.loc[:, self.studentID]
+
+		# Drop the student
+		recColumn.drop(index = self.studentID, inplace = True)
+
+		return recColumn
 
 
 

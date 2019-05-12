@@ -15,11 +15,15 @@ import argparse
 import re
 from collections import OrderedDict
 
-import classmatrix
-import OParkClass
-import OParkStudent
-import OParkFriend
-import OrlandParkUtils
+from orlandpark import classmatrix
+from orlandpark import OParkClass
+from orlandpark import OParkStudent
+from orlandpark import OParkFriend
+from orlandpark import OrlandParkUtils
+
+#provDir = "C:/usr/GoogleDrive/Programming/SraLab/data/Behavioral Nomination Item data"
+#tmp_dir = OrlandParkUtils.GetProvisions(provDir)
+
 
 friendshipMatrixFile = "C:/Programs/cygwin64/home/jab112/github/SraLab/data/Orland_Park/Friendship_Nominations/Socallb item 5 Unlimited Friend Noms 5.17.17.xlsx"
 

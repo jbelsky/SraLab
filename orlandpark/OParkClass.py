@@ -1,8 +1,9 @@
 import pandas as pd
-from . import OParkStudent
 from collections import OrderedDict
 
-# Set up the new OPClass
+from . import OParkStudent
+
+# Set up the OParkClass
 
 class OParkClass:
 
@@ -10,33 +11,6 @@ class OParkClass:
 
 		self.classID = ARG_CLASS_ID
 		self.students = OrderedDict()
-
-	'''
-	def __init__(self, _classID, _students_list, _friendship_dict, _allClassPeerProvisionsByItem_dict):
-
-		self.classID = _classID
-		self.students_list = _students_list
-		self.friendships_dict = _friendship_dict
-
-		self.peerProvisions_dict = OrderedDict()
-		self.peerProvisions_items = list(_allClassPeerProvisionsByItem_dict)
-		self.peerProvisions_items.sort()
-
-		for i in self.peerProvisions_items:
-			if self.classID in _allClassPeerProvisionsByItem_dict[i]:
-				self.peerProvisions_dict[i] = _allClassPeerProvisionsByItem_dict[i][self.classID]
-	'''
-
-	def get_studentIDs(self):
-
-		return [s.studentID for s in self.students_list]
-
-	def get_studentID(self, _studentID):
-
-		studentID_list = self.get_studentIDs()
-		oParkStudent_idx = studentID_list.index(_studentID)
-
-		return self.students_list()[oParkStudent_idx]
 
 	def initialize_students(self, ARG_GENDER_SRS):
 
@@ -80,6 +54,39 @@ class OParkClass:
 
 		return df
 
+	def initialize_provisions(self, ARG_PROV_DICT):
+
+		# Iterate through each Item and extract the data frame for the relevant class
+		for k in ARG_PROV_DICT:
+
+			item_df = ARG_PROV_DICT[k][self.classID]
+			return item_df
+
+	'''
+	def __init__(self, _classID, _students_list, _friendship_dict, _allClassPeerProvisionsByItem_dict):
+
+		self.classID = _classID
+		self.students_list = _students_list
+		self.friendships_dict = _friendship_dict
+
+		self.peerProvisions_dict = OrderedDict()
+		self.peerProvisions_items = list(_allClassPeerProvisionsByItem_dict)
+		self.peerProvisions_items.sort()
+
+		for i in self.peerProvisions_items:
+			if self.classID in _allClassPeerProvisionsByItem_dict[i]:
+				self.peerProvisions_dict[i] = _allClassPeerProvisionsByItem_dict[i][self.classID]
+
+	def get_studentIDs(self):
+
+		return [s.studentID for s in self.students_list]
+
+	def get_studentID(self, _studentID):
+
+		studentID_list = self.get_studentIDs()
+		oParkStudent_idx = studentID_list.index(_studentID)
+
+		return self.students_list()[oParkStudent_idx]
 
 
 
@@ -141,3 +148,5 @@ class OParkClass:
 			item_odict[item] = itemStat_df
 
 		self.itemStat_odict = item_odict
+
+	'''

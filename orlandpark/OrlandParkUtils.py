@@ -18,7 +18,7 @@ def GetProvisions(ARG_PROV_DIR):
 	provDict = {}
 
 	# Obtain the number of peer provision matrices
-	provXlsxFiles = glob.glob(ARG_PROV_DIR + "/*xlsx")
+	provXlsxFiles = glob.glob(ARG_PROV_DIR + "/*.xlsx")
 	provXlsxFiles.sort()
 
 	# Get the peer provision item -> file dict
@@ -43,64 +43,18 @@ def GetProvisions(ARG_PROV_DIR):
 		provDict[item] = {}
 
 		# Open the Excel file
-		provXlsx = openpyxl.load_workbook(provXlsxFile)
+		wb = openpyxl.load_workbook(provXlsxFile)
+		sheetnames = wb.sheetnames
+		sheetnames.sort()
 
-		for className in provXlsx.sheetnames:
+		for sn in sheetnames:
 
-			if "Class" not in className:
+			if "Class" not in sn:
 				continue
 
-			data_df, gender_s = classmatrix.GetDataMatrix(provXlsx[className])
+			data_df, gender_s = classmatrix.GetDataMatrix(wb[sn])
 
 			# Enter into dict
-			provDict[item][className] = data_df
-
-		provXlsx.close()
+			provDict[item][sn] = data_df
 
 	return provDict
-
-
-def GetClassFriendshipForEachStudent(_friendship_df, ARG_GENDER_SRS):
-
-	# Initialize the class_friendship dict
-	classFriendship_dict = OrderedDict()
-
-	# Iterate through each row
-	for i in _friendship_df.index:
-
-		# Initialize the student series
-		studentFriendship_df = pd.DataFrame(index = _friendship_df.columns, columns = ["Type", "Gender"], dtype = str)
-		studentFriendship_df["Gender"] = ARG_GENDER_SRS
-
-		# Drop the current student from the studentFriendship_srs
-		studentFriendship_df.drop(index = i, inplace = True)
-
-		for j in studentFriendship_df.index:
-
-			given = _friendship_df.loc[i, j]
-			received = _friendship_df.loc[j, i]
-
-			if (given == 9) | (received == 9):
-				studentFriendship_df.loc[j, "Type"] = "NA"
-				continue
-
-			# Get the given and received status
-			isGiven = True if given == 1 else False
-			isReceived = True if received == 1 else False
-
-			if isGiven and isReceived:
-				fsType = "reciprocated"
-			elif isGiven:
-				fsType = "given"
-			elif isReceived:
-				fsType = "received"
-			else:
-				fsType = "none"
-
-			studentFriendship_df.loc[j, "Type"] = fsType
-
-		# Add to the dict
-		classFriendship_dict[i] = studentFriendship_df
-
-	# Return the friendship matrix
-	return classFriendship_dict

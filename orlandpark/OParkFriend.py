@@ -10,7 +10,8 @@ class OParkFriend:
 
 		# Initialize other variables
 		self.friendType = None
-		self.provisionsGiven = pd.Series(index = range(1, 13), dtype = int)
+		self.provisionsGiven = {}
+		self.provisionsReceived = {}
 
 	def get_gender_relationship(self):
 
@@ -23,9 +24,13 @@ class OParkFriend:
 
 		return self.friendType
 
-	def set_provision(self, ARG_PROVISION, ARG_GIVEN):
+	def set_provision_given(self, ARG_PROVISION, ARG_GIVEN):
 
-		self.provisionsGiven.loc[ARG_PROVISION] = ARG_GIVEN
+		self.provisionsGiven[ARG_PROVISION] = ARG_GIVEN
+
+	def set_provision_received(self, ARG_PROVISION, ARG_RECEIEVED):
+
+		self.provisionsReceived[ARG_PROVISION] = ARG_RECEIVED
 
 	def set_friendship_type(self, ARG_FRIENDSHIP_DF):
 

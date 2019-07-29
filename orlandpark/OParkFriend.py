@@ -10,8 +10,7 @@ class OParkFriend:
 
 		# Initialize other variables
 		self.friendType = None
-		self.provisionsGiven = {}
-		self.provisionsReceived = {}
+		self.provisions = {}
 
 	def get_gender_relationship(self):
 
@@ -24,13 +23,18 @@ class OParkFriend:
 
 		return self.friendType
 
-	def set_provision_given(self, ARG_PROVISION, ARG_GIVEN):
+	def set_provision(self, PROVISION, TYPE, VALUE):
 
-		self.provisionsGiven[ARG_PROVISION] = ARG_GIVEN
+		# Initialize provision if doesn't exist
+		if PROVISION not in self.provisions:
+			self.provisions[PROVISION] = {}
 
-	def set_provision_received(self, ARG_PROVISION, ARG_RECEIEVED):
+		# Initialize given/received
+		if TYPE not in self.provisions[PROVISION]:
+			self.provisions[PROVISION] = {}
 
-		self.provisionsReceived[ARG_PROVISION] = ARG_RECEIVED
+		# Add the value
+		self.provisions[PROVISION][TYPE] = VALUE
 
 	def set_friendship_type(self, ARG_FRIENDSHIP_DF):
 

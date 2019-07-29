@@ -6,11 +6,8 @@ import re
 import sys
 from collections import OrderedDict
 
-from . import classmatrix
-
-#from orlandpark import classmatrix
-#from orlandpark import OParkClass
-#from orlandpark import OParkStudent
+import classmatrix
+import OParkStudent
 
 def GetProvisions(ARG_PROV_DIR):
 
@@ -58,3 +55,19 @@ def GetProvisions(ARG_PROV_DIR):
 			provDict[item][sn] = data_df
 
 	return provDict
+
+friendship_file = "C:/Programs/cygwin64/home/jab112/github/SraLab/data/Orland_Park/Friendship_Nominations/Socallb item 5 Unlimited Friend Noms 5.17.17.xlsx"
+
+# Open the Excel file
+wb = openpyxl.load_workbook(friendship_file)
+
+friendship_df, gender_s = classmatrix.GetDataMatrix(wb["Class 15"])
+
+students = OrderedDict()
+
+for i in gender_s.items():
+
+        stID = i[0]
+        gender = i[1]
+
+        students[stID] = OParkStudent.OParkStudent(stID, gender)

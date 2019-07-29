@@ -26,10 +26,6 @@ class OParkStudent:
 
 	def init_class_friendships(self, ARG_OPARKCLASS_STUDENTS, ARG_FRIENDSHIP_DF):
 
-		# Check if student is missing
-		if all(ARG_FRIENDSHIP_DF.loc[self.studentID] == 9):
-			self.missing = True
-
 		# Iterate through the other students in the class
 		for i, ops in ARG_OPARKCLASS_STUDENTS.items():
 
@@ -39,4 +35,4 @@ class OParkStudent:
 			opf = OParkFriend.OParkFriend(self, ops)
 			opf.set_friendship_type(ARG_FRIENDSHIP_DF)
 
-			self.friends[i] = opf
+			self.friends.append(opf)

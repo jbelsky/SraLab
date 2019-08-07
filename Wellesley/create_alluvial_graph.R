@@ -55,7 +55,8 @@ transform_to_single_rows = function(ARG_INPUT_DF, ARG_SPLIT){
 
 	# Reorder the winter columns
 	data.df[,2] = factor(data.df[,2], levels = c("Acquaintance", "Rev. Unilateral", "Unilateral", "Reciprocal"))
-	data.df = data.df[order(data.df[,2]),]
+	data.df[,3] = factor(data.df[,3], levels = c("Acquaintance", "Rev. Unilateral", "Unilateral", "Reciprocal"))
+	data.df = data.df[order(data.df[,2], data.df[,3]),]
 
 	# Return the data.df
 	return(data.df)
@@ -93,22 +94,35 @@ friends.df = as.data.frame(read_excel(file.path(DATA_DIR, "Two_Step_Transitions.
 # Set the friendship types
 friendshipTypes = c("Acquaintance", "Rev. Unilateral", "Unilateral", "Reciprocal")
 
-# Set the year column range
-years.df = data.frame(year = c(1, 2), l = c(2, 6), r = c(5, 9))
-friendRange.df = data.frame(fr = friendshipTypes, l = seq(1, 13, 4), r = seq(4, 16, 4))
+for(f in 1:4){
 
-for(f in 2:4){
+	for(y in 1:2){
 
-	for(y in 1:nrow(years.df)){
+		# Get the year coordinates
+		if(y == 1){
+			lYear = 2
+			rYear = 5
+		}else{
+			lYear = 6
+			rYear = 9
+		}
 
+		# Get the row coordinates
+		tRow = 1 + (f - 1) * 4
+		bRow = 4 + (f - 1) * 4
 
-		data.df = transform_to_columns(friends.df[1:4, years.df$l[y]:years.df$r[y]], friendshipTypes[f])
+		data.df = transform_to_columns(friends.df[tRow:bRow, lYear:rYear], friendshipTypes[f])
+
+		if(empty(data.df)){
+			cat("No data for ", friendshipTypes[f], " year ", y, "skipping...\n", sep = "")
+			next
+		}
 
 		for(j in 1:2){
 
 			single_rows.df = transform_to_single_rows(data.df, j)
 
-			create_graph(paste0(friendshipTypes[f], "_year_", y, "_rowN_", j, ".png"), single_rows.df)
+			create_graph(paste0("20190807/", friendshipTypes[f], "_year_", y, "_rowN_", j, ".png"), single_rows.df)
 
 		}
 

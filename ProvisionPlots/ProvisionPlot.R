@@ -3,7 +3,7 @@ xleft = -0.3
 xright = 0.3
 ylow = 12
 yhigh = 25
-plot_type = "Companionship"
+plot_type = "Help"
 
 
 param.df = read.table(paste0(plot_type, ".cfg"), sep = "\t", header = T)
@@ -42,6 +42,21 @@ GetYCoords = function(ARG_LINE_PARAMS, ARG_X_PAIR){
 # Make the plot
 MakePlot = function(ARG_CHART, ARG_X_PAIR, ARG_Y_PAIR, ARG_Y_LIST, ARG_SAVE_PNG = F){
 
+	# Set the xlabels and legend
+	if(ARG_CHART == "ClassProvisions"){
+		xLabels = "Classroom-Level Provisions Received (SG)"
+		legendLabels = c(bquote(paste("Low-Provisions Individual (", 20^th, " Percentile)")),
+						 bquote(paste("Average-Provisions Individual (", 50^th, " Percentile)")),
+						 bquote(paste("High-Provisions Individual (", 80^th, " Percentile)"))
+						)
+	}else{
+		xLabels = paste0("Child-Level ", ARG_CHART, " Received (SG)")
+		legendLabels = c(bquote(paste("Low-", .(ARG_CHART), " Class (", 20^th, " Percentile)")),
+						 bquote(paste("Average-", .(ARG_CHART), " Class (", 50^th, " Percentile)")),
+						 bquote(paste("High-", .(ARG_CHART), " Class (", 80^th, " Percentile)"))
+						)
+	}
+
 	if(ARG_SAVE_PNG){
 		png(file = paste0(ARG_CHART, ".png"), width = 7, height = 7, units = "in", res = 300)
 	}
@@ -59,25 +74,21 @@ MakePlot = function(ARG_CHART, ARG_X_PAIR, ARG_Y_PAIR, ARG_Y_LIST, ARG_SAVE_PNG 
 	axis(1, at = seq(-1, 1, 0.1))
 	axis(2, at = seq(11, 25, 2), labels = F, tcl = par()$tcl * 0.7)
 	axis(2, at = seq(10, 26, 2))
-	title(ylab = "Loneliness", xlab = paste0("Child-Level ", ARG_CHART, " Received (SG)"), cex.lab = 1)
+
+	# Set the label titles
+	title(ylab = "Loneliness", xlab = xLabels, cex.lab = 1)
 
 	# Draw the lines
 	for(i in 1:3){
 		lines(ARG_X_PAIR, ARG_Y_LIST[[i]], lwd=3, lty=i)
 	}
 
-	legend("bottomleft",
-		   legend = sapply(
-							c(bquote(paste("Low-", .(ARG_CHART), " Class (", 20^th, " Percentile)")),
-		   			  		  bquote(paste("Average-", .(ARG_CHART), " Class (", 50^th, " Percentile)")),
-		   			          bquote(paste("High-", .(ARG_CHART), " Class (", 80^th, " Percentile)"))
-					         ), 
-                            as.expression
-                           ),
-		   lwd = 3, lty = c(1, 2, 3),
-		   bty = "n"
+	# Add the legend
+	legend("bottomleft", legend = sapply(legendLabels, as.expression), bty = "n",
+		   lwd = 3, lty = c(1, 2, 3)
 		  )
 
+	# Close the device
 	if(ARG_SAVE_PNG){
 		dev.off()
 	}

@@ -1,3 +1,15 @@
+# Plots
+*.png
+
+# Vim swp files
+.*.swp
+
+# Pycharm
+.idea/
+
+# R history
+.Rhistory
+
 # Excel files
 *.xls
 *.xlsx

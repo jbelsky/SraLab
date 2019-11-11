@@ -3,7 +3,7 @@ xleft = -0.3
 xright = 0.3
 ylow = 12
 yhigh = 25
-plot_type = "Help"
+plot_type = "Companionship"
 
 
 param.df = read.table(paste0(plot_type, ".cfg"), sep = "\t", header = T)
@@ -59,7 +59,7 @@ MakePlot = function(ARG_CHART, ARG_X_PAIR, ARG_Y_PAIR, ARG_Y_LIST, ARG_SAVE_PNG 
 	axis(1, at = seq(-1, 1, 0.1))
 	axis(2, at = seq(11, 25, 2), labels = F, tcl = par()$tcl * 0.7)
 	axis(2, at = seq(10, 26, 2))
-	title(ylab = "Loneliness", xlab = paste0("Child-Level ", ARG_CHART, " Provisions Received (SG)"), cex.lab = 1)
+	title(ylab = "Loneliness", xlab = paste0("Child-Level ", ARG_CHART, " Received (SG)"), cex.lab = 1)
 
 	# Draw the lines
 	for(i in 1:3){

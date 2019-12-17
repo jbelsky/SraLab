@@ -3,7 +3,7 @@ xleft = -0.3
 xright = 0.3
 ylow = 12
 yhigh = 25
-plot_type = "Help"
+plot_type = "ClassLevelProvisionsByProvisions"
 
 
 param.df = read.table(paste0(plot_type, ".cfg"), sep = "\t", header = T)
@@ -43,17 +43,29 @@ GetYCoords = function(ARG_LINE_PARAMS, ARG_X_PAIR){
 MakePlot = function(ARG_CHART, ARG_X_PAIR, ARG_Y_PAIR, ARG_Y_LIST, ARG_SAVE_PNG = F){
 
 	# Set the xlabels and legend
-	if(ARG_CHART == "ClassProvisions"){
+	if(ARG_CHART == "ClassLevelProvisionsByProvisions"){
 		xLabels = "Classroom-Level Provisions Received (SG)"
 		legendLabels = c(bquote(paste("Low-Provisions Individual (", 20^th, " Percentile)")),
 						 bquote(paste("Average-Provisions Individual (", 50^th, " Percentile)")),
 						 bquote(paste("High-Provisions Individual (", 80^th, " Percentile)"))
 						)
-	}else{
-		xLabels = paste0("Child-Level ", ARG_CHART, " Received (SG)")
-		legendLabels = c(bquote(paste("Low-", .(ARG_CHART), " Class (", 20^th, " Percentile)")),
-						 bquote(paste("Average-", .(ARG_CHART), " Class (", 50^th, " Percentile)")),
-						 bquote(paste("High-", .(ARG_CHART), " Class (", 80^th, " Percentile)"))
+	}else if(ARG_CHART == "ChildLevelHelpByHelp"){
+		xLabels = paste0("Child-Level Help Received (SG)")
+		legendLabels = c(bquote(paste("Low-Help Class (", 20^th, " Percentile)")),
+						 bquote(paste("Average-Help Class (", 50^th, " Percentile)")),
+						 bquote(paste("High-Help Class (", 80^th, " Percentile)"))
+						)
+	}else if(ARG_CHART == "ClassLevelCompanionshipByCompanionship"){
+		xLabels = "Classroom-Level Companionship Received (SG)"
+		legendLabels = c(bquote(paste("Low-Companionship Individual (", 20^th, " Percentile)")),
+						 bquote(paste("Average-Companionship Individual (", 50^th, " Percentile)")),
+						 bquote(paste("High-Companionship Individual (", 80^th, " Percentile)"))
+						)
+	}else if(ARG_CHART == "ClassLevelHelpByHelp"){
+		xLabels = "Classroom-Level Help Received (SG)"
+		legendLabels = c(bquote(paste("Low-Help Individual (", 20^th, " Percentile)")),
+						 bquote(paste("Average-Help Individual (", 50^th, " Percentile)")),
+						 bquote(paste("High-Help Individual (", 80^th, " Percentile)"))
 						)
 	}
 

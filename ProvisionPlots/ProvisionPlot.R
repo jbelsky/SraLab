@@ -1,10 +1,25 @@
+# Available plot types
+# - ClassLevelProvisionsByProvisions
+# - ClassLevel12ItemProvisionsByProvisions
+# - ChildLevel12ItemProvisionsByProvisions
+# - ChildLevelHelpByHelp
+# - ClassLevelCompanionshipByCompanionship
+# - ClassLevelHelpByHelp
+
+# Each plot type has a PLOT_TYPE.cfg file with the following
+# structure of the tab-delimited file:
+# pts -> left -> right
+# x   ->      ->
+# y1  ->      ->
+# y2  ->      ->
+# y3  ->      ->
+
 # Set the input parameters
 xleft = -0.3
 xright = 0.3
 ylow = 12
 yhigh = 25
-plot_type = "ClassLevelHelpByHelp"
-
+plot_type = "ChildLevel12ItemProvisionsByProvisions"
 
 param.df = read.table(paste0(plot_type, ".cfg"), sep = "\t", header = T)
 
@@ -48,6 +63,18 @@ MakePlot = function(ARG_CHART, ARG_X_PAIR, ARG_Y_PAIR, ARG_Y_LIST, ARG_SAVE_PNG 
 		legendLabels = c(bquote(paste("Low-Provisions Child (", 20^th, " Percentile)")),
 						 bquote(paste("Average-Provisions Child (", 50^th, " Percentile)")),
 						 bquote(paste("High-Provisions Child (", 80^th, " Percentile)"))
+						)
+	}else if(ARG_CHART == "ClassLevel12ItemProvisionsByProvisions"){
+		xLabels = "Classroom-Level 12-Item Composite Provisions Received (SG)"
+		legendLabels = c(bquote(paste("Low-Provisions Child (", 20^th, " Percentile)")),
+						 bquote(paste("Average-Provisions Child (", 50^th, " Percentile)")),
+						 bquote(paste("High-Provisions Child (", 80^th, " Percentile)"))
+						)
+	}else if(ARG_CHART == "ChildLevel12ItemProvisionsByProvisions"){
+		xLabels = "Child-Level 12-Item Composite Provisions Received (SG)"
+		legendLabels = c(bquote(paste("Low-Provisions Class (", 20^th, " Percentile)")),
+						 bquote(paste("Average-Provisions Class (", 50^th, " Percentile)")),
+						 bquote(paste("High-Provisions Class (", 80^th, " Percentile)"))
 						)
 	}else if(ARG_CHART == "ChildLevelHelpByHelp"){
 		xLabels = paste0("Child-Level Help Received (SG)")

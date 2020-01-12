@@ -89,7 +89,7 @@ create_graph = function(ARG_FILENAME, ARG_INPUT_DF){
 
 DATA_DIR = "C:/Programs/cygwin64/home/jab112/github/SraLab/data/Wellesley"
 
-friends.df = as.data.frame(read_excel(file.path(DATA_DIR, "Two_Step_Transitions.xlsx"), range = "A3:I19"))
+friends.df = as.data.frame(read_excel(file.path(DATA_DIR, "D08_Dyad_Careers_190902.xlsx"), range = "A3:I19"))
 
 # Set the friendship types
 friendshipTypes = c("Acquaintance", "Rev. Unilateral", "Unilateral", "Reciprocal")

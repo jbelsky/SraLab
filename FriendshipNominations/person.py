@@ -1,154 +1,101 @@
+from friend import Friend
+
 class Person:
-    
+
     def __init__(self, _id):
         self.id = _id
-        self.nominations = None
-        self.top3 = None
-        self.closest = None
-        self.nom_list = None
-        self.top3_list = None
+        self.nominations = dict()
 
-    def add_nom_list(self, _row):
-        self.nom_list = _row
+    def add_nominations(self, _row):
 
-    def check_nom_list_reciprocated(self, _person_dict):
+        # Iterate through the nominations section of the row
+        for i in range(1, 11):
 
-        self.nom_list_recip = []
+            # Get the value
+            val = _row[i]
 
-        for i, v in enumerate(self.nom_list):
+            # Skip if None or 1
+            if not val or val == 1:
+                continue
 
-            if v in _person_dict:
-                friend = _person_dict[v]
-                if not friend.nominations:
-                    recip = 9
-                elif v in friend.nominations:
-                    recip = 1
-                else:
-                    recip = 0
-            else:
-                if v and v != 1:
-                    recip = 9
-                else:
-                    recip = ""
+            # Initialize the friend
+            nom = Friend(val)
 
-            self.nom_list_recip.append(recip)
+            # Check whether friend is in top3
+            if _row[i + 10] == 1:
+                nom.set_top3()
 
-    def write_nom_row(self):
+            self.nominations[nom.get_id()] = nom
 
-        out = []
-        for i, nom in enumerate(self.nom_list):
-            if not nom:
-                nom = ""
-            out.append(nom)
-            out.append(self.nom_list_recip[i])
+        # Get the closest idx
+        closest_idx = _row[-1]
 
-        return "\t".join([str(x) for x in out])
+        # Get the top3 nominations
+        top3_friends = self.get_top3()
 
-    def check_top3_list_reciprocated(self, _person_dict):
+        if closest_idx and top3_friends:
+            friend_ids = list(top3_friends.keys())
+            closest_friend = friend_ids[closest_idx - 1]
+            top3_friends[closest_friend].set_closest()
 
-        self.top3_list_recip = []
-
-        for i, v in enumerate(self.top3_list):
-
-            if v in _person_dict:
-                friend = _person_dict[v]
-                if not friend.top3:
-                    recip = 9
-                elif v in friend.top3:
-                    recip = 1
-                else:
-                    recip = 0
-            else:
-                if v and v != 1:
-                    recip = 9
-                else:
-                    recip = ""
-            self.top3_list_recip.append(recip)
-
-    def write_top3_row(self):
-
-        out = []
-        for i, nom in enumerate(self.top3_list):
-            if not nom:
-                nom = ""
-            out.append(nom)
-            out.append(self.top3_list_recip[i])
-
-        return "\t".join([str(x) for x in out])
-
-    def check_closest_reciprocated(self, _person_dict):
-
-        if self.closest in _person_dict:
-            friend = _person_dict[self.closest]
-            if not friend.closest:
-                recip = 9
-            elif self.closest == friend.closest:
-                recip = 1
-            else:
-                recip = 0
-        else:
-            recip = 9
-
-        self.closest_recip = recip
-
-    def write_closest(self):
-        closest = self.closest
-        if not closest:
-            closest = ""
-
-        return str(closest) + "\t" + str(self.closest_recip)
-
-
-    def add_top3_list(self, _row):
-        self.top3_list = _row
-
-    def add_nomination(self, arg_id):
-        if not self.nominations:
-            self.nominations = set()
-        self.nominations.add(arg_id)
-
-    def add_top3(self, arg_id):
-
-        if not self.top3:
-            self.top3 = []
-        self.top3.append(arg_id)
-
-    def add_closest(self, arg_id):
-
-        self.closest = arg_id
-
-    def check_if_nominated(self, arg_id):
-        if arg_id in self.nominations:
-            return True
-        else:
-            return False
-    
-    def set_top_three(self, arg_id_arr):
-        if len(arg_id_arr) == 0:
-            self.top3 = None
-        else:
-            self.top3 = set(arg_id_arr)
-    
-    def set_top(self, arg_id):
-        self.top = arg_id
+    def get_id(self):
+        return self.id
 
     def get_nominations(self):
         return self.nominations
-    
-    def get_top3(self):
-        return self.top3
-    
-    def get_top(self):
-        return self.top
-    
-    def is_id_in_nom(self, arg_id):
-        if self.nominations and arg_id in self.nominations:
-            return True
-        else:
-            return False
 
-    def is_id_in_top3(self, arg_id):
-        if self.top3 and arg_id in self.top3:
-            return True
+    def get_top3(self):
+
+        # Get the top3
+        top3 = dict()
+
+        for f_id, f_obj in self.nominations.items():
+
+            if f_obj.is_top3():
+                top3[f_id] = f_obj
+
+        return top3
+
+    # Get the closest friend
+    def get_closest(self):
+
+        for f_id, f_obj in self.nominations.items():
+
+            if f_obj.is_closest():
+                return k
+
+    def check_reciprocal_friend(self, _nom):
+
+        nom = _nom  # type: Person
+
+        # Check if nomination data available
+        if not nom.get_nominations():
+            return 9
+        elif self.id in nom.get_nominations():
+            return 1
         else:
-            return False
+            return 0
+
+    def check_reciprocal_top3(self, _nom):
+
+        nom = _nom  # type: Person
+
+        # Check if nomination data available
+        if not nom.get_nominations():
+            return 9
+        elif self.id in nom.get_top3():
+            return 1
+        else:
+            return 0
+
+    def check_reciprocal_closest(self, _nom):
+
+        nom = _nom  # type: Person
+
+        # Check if nomination data available
+        if not nom.get_closest():
+            return 9
+        elif self.id == nom.get_closest():
+            return 1
+        else:
+            return 0

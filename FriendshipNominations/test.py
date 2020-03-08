@@ -30,3 +30,13 @@ for r in ws.iter_rows(min_row=2):
     p.add_nominations(row_list)
 
     p_dict[p.id] = p
+
+pobj = p_dict[192392]
+
+for k, v in pobj.get_nominations().items():
+    if k not in p_dict:
+        print(str(k) + "\t" + "9")
+    else:
+        print(pobj.check_reciprocal_friend(p_dict[k]))
+        print(pobj.check_reciprocal_top3(p_dict[k]))
+        print(pobj.check_reciprocal_closest(p_dict[k]))

@@ -62,7 +62,7 @@ class Person:
         for f_id, f_obj in self.nominations.items():
 
             if f_obj.is_closest():
-                return k
+                return f_id
 
     def check_reciprocal_friend(self, _nom):
 

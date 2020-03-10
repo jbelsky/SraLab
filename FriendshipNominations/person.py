@@ -35,8 +35,9 @@ class Person:
 
         if closest_idx and top3_friends:
             friend_ids = list(top3_friends.keys())
-            closest_friend = friend_ids[closest_idx - 1]
-            top3_friends[closest_friend].set_closest()
+            if closest_idx - 1 < len(friend_ids):
+                closest_friend = friend_ids[closest_idx - 1]
+                top3_friends[closest_friend].set_closest()
 
     def get_id(self):
         return self.id
